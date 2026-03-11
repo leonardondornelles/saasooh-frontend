@@ -12,7 +12,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   // This function will run when the user hits log in
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setError("");
     
