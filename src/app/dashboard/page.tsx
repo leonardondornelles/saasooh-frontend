@@ -1,4 +1,4 @@
-"use function";
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -41,11 +41,14 @@ export default function DashboardPage() {
       loadData();
     }, []);
 
+
+// LOGOUT FUNCTION
   const handleLogout = () => {
     Cookies.remove("saas_token");
     router.push("/");
   };
 
+  // CREATE PANEL FUNCTION
   const handleCreatePanel = async (e:React.SyntheticEvent) => {
     e.preventDefault();
     setCreating(true);
@@ -55,7 +58,7 @@ export default function DashboardPage() {
         address: addressName,
         city: cityName,
         latitude: latitudeValue,
-        longetude: longitude,
+        longitude: longitude,
         panelType: panelType
       });
 
@@ -73,6 +76,23 @@ export default function DashboardPage() {
     } finally {
       setCreating(false);
     }
+  };
+
+  // DELETE PANEL FUNCTION
+  const handleDeletePanel = async (id: number) => {
+    if (!window.confirm("Tem certeza que deseja excluir este painel? Esta ação não pode ser desfeita.")){
+      return;
+    }
+
+    try {
+      await api.delete(`/api/panels/${id}`);
+
+      loadData();
+    } catch (error) {
+      console.error("Erro ao deletar painel:", error);
+      alert("Erro ao tentar excluir o painel");
+    }
+
   };
 
   return (
@@ -104,7 +124,7 @@ export default function DashboardPage() {
                 required
                 value={addressName}
                 onChange={(e) => setAddressName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outilne-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outilne-none focus:ring-blue-500 focus:border-blue-500 text-gray-500"
                 placeholder="Ex: 24 de Outubro, 1201 x Cel. Bordini"
                 />
             </div>
@@ -116,7 +136,7 @@ export default function DashboardPage() {
                 required
                 value={cityName}
                 onChange={(e) => setCityName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-500"
                 placeholder="Ex: Porto Alegre, RS"
               />
             </div>
@@ -129,7 +149,7 @@ export default function DashboardPage() {
                 required
                 value={latitudeValue}
                 onChange={(e) => setLatitudeValue(parseFloat(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-500"
                 placeholder="Ex: -30.0346"
               />
             </div>
@@ -142,7 +162,7 @@ export default function DashboardPage() {
                 required
                 value={longitude}
                 onChange={(e) => setLongitude(parseFloat(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-500"
                 placeholder="Ex: -51.2177"
               />
             </div>
@@ -153,16 +173,14 @@ export default function DashboardPage() {
                 required
                 value={panelType}
                 onChange={(e) => setPanelType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-500"
               >
-                <option value="" disabled>Selecione...</option>
-                <option value="OUTDOOR" disabled>Outdoor</option>
-                <option value="FRONT_LIGHT" disabled>Front Light</option>
-                <option value="TRIEDRO" disabled>Triedro</option>
-                <option value="LED" disabled>LED</option>
-                <option value="EMPENA" disabled>Empena</option>
-                <option value="RODOVIARIO" disabled>Rodoviario</option>
-
+                <option value="OUTDOOR">Outdoor</option>
+                <option value="FRONT_LIGHT">Front Light</option>
+                <option value="TRIEDRO">Triedro</option>
+                <option value="LED">LED</option>
+                <option value="EMPENA">Empena</option>
+                <option value="RODOVIARIO">Rodoviário</option>
               </select>
             </div>
             <button
@@ -188,19 +206,47 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {panels.map((panel, index) => (
-                <div key={index} className="p-5 border border-gray-200 rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow">
-                  <h3 className="font-bold text-gray-800 mb-3">Painel #{panel.id || index}</h3>
+                <div key={panel.id || index} className="border border-gray-200 rounded-xl bg-white hover:shadow-lg transition-shadow overflow-hidden">
                   
-                  {/* Image PlaceHolder */}
-                  <div className="h-40 bg-gray-100 rounded flex items-center justify-center mb-4 text-gray-400 border-2 border-dashed border-gray-200">
-                    <span>📷 Imagem em breve</span>
+                  {/* Image Placeholder */}
+                  <div className="h-40 bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center text-slate-400 relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-xs font-medium tracking-wide">Imagem em breve</span>
                   </div>
-                  
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <p><span className="font-semibold text-gray-700">Cidade:</span> {panel.city}</p>
-                    <p><span className="font-semibold text-gray-700">Endereço:</span> {panel.address}</p>
-                    <p><span className="font-semibold text-gray-700">GPS:</span> {panel.latitude}, {panel.longitude}</p>
-                    <p><span className="font-semibold text-gray-700">Tipo:</span> <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">{panel.type}</span></p>
+
+                  {/* Card Body */}
+                  <div className="p-5">
+                    {/* Header com título e lixeira */}
+                    <div className="flex justify-between items-center mb-3">
+                      <div>
+                        <h3 className="font-bold text-gray-800">Painel #{panel.id}</h3>
+                        <span className="text-xs text-gray-400">{panel.identificationCode}</span>
+                      </div>
+                      <button
+                        onClick={() => handleDeletePanel(panel.id)}
+                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Excluir painel"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Info */}
+                    <div className="space-y-1 text-sm text-gray-600">
+                      <p><span className="font-semibold text-gray-700">Cidade:</span> {panel.city}</p>
+                      <p><span className="font-semibold text-gray-700">Endereço:</span> {panel.address}</p>
+                      <p><span className="font-semibold text-gray-700">GPS:</span> {panel.latitude}, {panel.longitude}</p>
+                    </div>
+
+                    <div className="mt-3">
+                      <span className="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full text-xs font-medium">
+                        {panel.type}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}
