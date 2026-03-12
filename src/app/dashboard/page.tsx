@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { api } from "@/src/services/api";
+import Link from "next/link";
 
 
 export default function DashboardPage() {
@@ -247,6 +248,12 @@ export default function DashboardPage() {
                         {panel.type}
                       </span>
                     </div>
+                    <Link 
+                      href={`/dashboard/panel/${panel.id}`}
+                      className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1 rounded transition-colors text-sm mr-2 font-medium"
+                    >
+                      Ver Detalhes
+                    </Link>
                   </div>
                 </div>
               ))}
