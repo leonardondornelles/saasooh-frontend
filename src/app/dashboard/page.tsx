@@ -20,7 +20,7 @@ export default function DashboardPage() {
   const [cityName, setCityName] = useState("");
   const [latitudeValue, setLatitudeValue] = useState(0);
   const [longitude, setLongitude] = useState(0.0);
-  const [panelType, setPanelType] = useState("");
+  const [panelType, setPanelType] = useState("OUTDOOR");
   const [creating, setCreating] = useState(false);
 
   const [error, setError] = useState("");
