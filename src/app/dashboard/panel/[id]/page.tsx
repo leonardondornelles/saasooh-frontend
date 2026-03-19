@@ -2,7 +2,7 @@
 
 import React, { useState, use, useEffect } from "react";
 import Link from "next/link";
-import { api } from "@/src/services/api"; // Certifique-se de que o caminho import está correto para o seu projeto!
+import { api } from "@/src/services/api";
 import { 
   ChevronLeft, 
   ChevronRight,
@@ -25,14 +25,14 @@ interface Face {
   format: string;
   status: FaceStatus;
   lighting: boolean;
-  campaign?: {
+  campaigns?: {
     customerName: string;
     startDate: string;
     endDate: string;
     daysLeft: number;
     totalDays: number;
     contractValue: string;
-  };
+  }[];
 }
 
 export default function PanelDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -48,21 +48,68 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
   // Estado exclusivo para navegação das faces no painel de LED
   const [activeLedFaceIndex, setActiveLedFaceIndex] = useState(0);
 
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [isCreatingCampaign, setIsCreatingCampaign] = useState(false);
+  const [campaignForm, setCampaignForm] = useState({
+    customerId: "",
+    startDate: "",
+    endDate: "",
+    monthlyValue: ""
+  });
+
   useEffect(() => {
-    const fetchPanelDetails = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get(`/api/panels/${panelId}`);
-        setPanelData(response.data);
+        const panelResponse = await api.get(`/api/panels/${panelId}`);
+        setPanelData(panelResponse.data);
+
+        const customerResponse = await api.get("/api/customers");
+        setCustomers(customerResponse.data);
       } catch (err) {
-        console.error("Erro ao carregar os detalhes do painel:", err);
-        setError("Não foi possível carregar os dados deste painel.");
+        console.error("Erro ao carregar os dados:", err);
+        setError("Não foi possível carregar os dados");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPanelDetails();
+    fetchData();
   }, [panelId]);
+
+  const handleCreateCampaign = async () => {
+    if (!campaignForm.customerId || !campaignForm.startDate || !campaignForm.endDate || !campaignForm.monthlyValue){
+      alert("Por favor, preencha todos os campos.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        customerId: Number(campaignForm.customerId),
+        faceId: selectedFace?.id,
+        executiveId: 1,
+        companyId: 1,
+        startDate: campaignForm.startDate,
+        endDate: campaignForm.endDate,
+        monthlyValue: Number(campaignForm.monthlyValue),
+        executiveName: "Executivo Teste"
+      };
+
+      await api.post("/api/campaigns", payload);
+      alert("Campanha criada com sucesso");
+
+      setIsCreatingCampaign(false);
+      setCampaignForm({ customerId: "", startDate: "", endDate: "", monthlyValue: ""});
+      window.location.reload();
+
+    } catch (error:any) {
+      console.error("Erro ao criar campanha:", error);
+      alert(error.response?.data || "Erro ao tentar cadastrar a campanha. Verifique o conflito de datas.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (loading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F8FAFC]">
@@ -104,6 +151,8 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
 
   // Faces a serem exibidas: Apenas 1 no LED (carrossel), ou todas as faces para os normais
   const displayFaces = isLed ? [panelData.faces[activeLedFaceIndex]] : panelData.faces;
+  const activeCampaign = selectedFace?.campaigns?.[0];
+  const isFaceBusy = (selectedFace?.status === "OCUPADO" || selectedFace?.status === "RESERVADO") && activeCampaign;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-slate-900">
@@ -321,7 +370,7 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
                   </p>
                 </div>
                 <button 
-                  onClick={() => setSelectedFace(null)} 
+                  onClick={() => { setSelectedFace(null); setIsCreatingCampaign(false); }} 
                   className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-all"
                 >
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
@@ -343,10 +392,13 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
             {/* Conteúdo da Gaveta */}
             <div className="flex-1 overflow-y-auto p-8">
               
-              {selectedFace.status === "OCUPADO" && selectedFace.campaign ? (
+              {/* 🚀 Usamos a nossa nova trava que aceita OCUPADO e RESERVADO */}
+              {isFaceBusy ? (
                 <div className="space-y-8">
                   <section>
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Campanha Atual</h3>
+                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
+                      {selectedFace.status === "RESERVADO" ? "Próxima Campanha" : "Campanha Atual"}
+                    </h3>
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
                       <div className="flex items-center gap-4 mb-6">
                         <div className="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xl shadow-sm">
@@ -354,30 +406,33 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
                         </div>
                         <div>
                           <p className="text-sm text-slate-500">Cliente</p>
-                          <p className="font-bold text-slate-800">{selectedFace.campaign.customerName}</p>
+                          {/* 🚀 Trocamos selectedFace.campaign por activeCampaign */}
+                          <p className="font-bold text-slate-800">{activeCampaign.customerName}</p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 mb-6">
                         <div className="space-y-1">
                           <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter leading-none">Início</p>
-                          <p className="text-sm font-semibold flex items-center gap-1.5"><Calendar size={14} className="text-slate-400"/> {selectedFace.campaign.startDate}</p>
+                          <p className="text-sm font-semibold flex items-center gap-1.5"><Calendar size={14} className="text-slate-400"/> {activeCampaign.startDate}</p>
                         </div>
                         <div className="space-y-1">
                           <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter leading-none">Término</p>
-                          <p className="text-sm font-semibold flex items-center gap-1.5"><Calendar size={14} className="text-slate-400"/> {selectedFace.campaign.endDate}</p>
+                          <p className="text-sm font-semibold flex items-center gap-1.5"><Calendar size={14} className="text-slate-400"/> {activeCampaign.endDate}</p>
                         </div>
                       </div>
 
                       <div className="pt-4 border-t border-slate-200">
                         <div className="flex justify-between items-end mb-2">
                           <p className="text-xs font-bold text-slate-600 uppercase tracking-tight">Vigência do contrato</p>
-                          <p className="text-xs font-black text-blue-600 italic">Faltam {selectedFace.campaign.daysLeft} dias</p>
+                          <p className="text-xs font-black text-blue-600 italic">
+                            {selectedFace.status === "RESERVADO" ? "Inicia em breve" : `Faltam ${activeCampaign.daysLeft} dias`}
+                          </p>
                         </div>
                         <div className="w-full bg-slate-200 rounded-full h-2">
                           <div 
                             className="bg-blue-600 h-2 rounded-full transition-all duration-1000" 
-                            style={{ width: `${(1 - (selectedFace.campaign.daysLeft / selectedFace.campaign.totalDays)) * 100}%` }}
+                            style={{ width: `${selectedFace.status === "RESERVADO" ? 0 : (1 - (activeCampaign.daysLeft / activeCampaign.totalDays)) * 100}%` }}
                           ></div>
                         </div>
                       </div>
@@ -393,7 +448,7 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
                           </div>
                           <div>
                             <p className="text-[10px] text-emerald-700 font-bold uppercase">Valor Mensal</p>
-                            <p className="text-lg font-bold text-emerald-900">{selectedFace.campaign.contractValue}</p>
+                            <p className="text-lg font-bold text-emerald-900">{activeCampaign.contractValue}</p>
                           </div>
                         </div>
                         <button className="text-emerald-700 hover:underline text-xs font-bold">Ver NF-e</button>
@@ -410,23 +465,81 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
                   </div>
                 </div>
               ) : (
-                <div className="h-full flex flex-col items-center justify-center text-center py-12">
-                  <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-6 text-4xl shadow-inner border border-emerald-100">
-                    🌿
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-800 mb-2">Espaço Livre</h3>
-                  <p className="text-slate-500 text-sm mb-8 max-w-[280px]">
-                    Não há campanhas ativas para esta face. Você pode criar uma reserva ou uma nova campanha direta.
-                  </p>
-                  
-                  <div className="w-full space-y-3">
-                    <button className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
-                      <span className="text-xl">+</span> Nova Campanha
-                    </button>
-                    <button className="w-full py-4 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-all">
-                      Fazer Reserva
-                    </button>
-                  </div>
+                <div className="h-full flex flex-col py-6">
+                  {!isCreatingCampaign ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-center">
+                      <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-6 text-4xl shadow-inner border border-emerald-100">🌿</div>
+                      <h3 className="text-xl font-bold text-slate-800 mb-2">Espaço Livre</h3>
+                      <p className="text-slate-500 text-sm mb-8 max-w-[280px]">
+                        Não há campanhas ativas para esta face. Você pode criar uma reserva ou uma nova campanha direta.
+                      </p>
+                      <div className="w-full space-y-3">
+                        <button 
+                          onClick={() => setIsCreatingCampaign(true)}
+                          className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+                        >
+                          <span className="text-xl">+</span> Nova Campanha
+                        </button>
+                        <button className="w-full py-4 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-all">
+                          Fazer Reserva
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
+                      <div className="flex items-center gap-2 mb-6">
+                        <button onClick={() => setIsCreatingCampaign(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                          <ChevronLeft size={20} />
+                        </button>
+                        <h3 className="text-lg font-bold text-slate-800">Nova Campanha</h3>
+                      </div>
+
+                      <div className="space-y-4 flex-1">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Cliente</label>
+                          <select 
+                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            value={campaignForm.customerId}
+                            onChange={(e) => setCampaignForm({...campaignForm, customerId: e.target.value})}
+                          >
+                            <option value="">Selecione o cliente...</option>
+                            {customers.map(c => (
+                              <option key={c.id} value={c.id}>{c.fantasyName} - {c.cnpj}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Início</label>
+                            <input type="date" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                              value={campaignForm.startDate} onChange={(e) => setCampaignForm({...campaignForm, startDate: e.target.value})} />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Término</label>
+                            <input type="date" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                              value={campaignForm.endDate} onChange={(e) => setCampaignForm({...campaignForm, endDate: e.target.value})} />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Valor do Contrato (R$)</label>
+                          <input type="number" placeholder="Ex: 5000.00" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            value={campaignForm.monthlyValue} onChange={(e) => setCampaignForm({...campaignForm, monthlyValue: e.target.value})} />
+                        </div>
+                      </div>
+
+                      <div className="pt-6 border-t border-slate-100 mt-6">
+                        <button 
+                          className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all disabled:opacity-50"
+                          onClick={handleCreateCampaign}
+                          disabled={isSubmitting}
+                        >
+                          {isSubmitting ? "Processando..." : "Confirmar Campanha"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -438,7 +551,7 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
       {selectedFace && (
         <div 
           className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] z-40 transition-opacity duration-500" 
-          onClick={() => setSelectedFace(null)}
+          onClick={() => { setSelectedFace(null); setIsCreatingCampaign(false); }}
         ></div>
       )}
 
