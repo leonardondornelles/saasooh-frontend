@@ -59,6 +59,14 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
     monthlyValue: ""
   });
 
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  const parseDateBR = (dateStr: string) => {
+    const [day, month, year] = dateStr.split('/');
+    return new Date(Number(year), Number(month) - 1, Number(day));
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -88,12 +96,9 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
       const payload = {
         customerId: Number(campaignForm.customerId),
         faceId: selectedFace?.id,
-        executiveId: 1,
-        companyId: 1,
         startDate: campaignForm.startDate,
         endDate: campaignForm.endDate,
         monthlyValue: Number(campaignForm.monthlyValue),
-        executiveName: "Executivo Teste"
       };
 
       await api.post("/api/campaigns", payload);
@@ -105,7 +110,19 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
 
     } catch (error:any) {
       console.error("Erro ao criar campanha:", error);
-      alert(error.response?.data || "Erro ao tentar cadastrar a campanha. Verifique o conflito de datas.");
+      
+      let errorMessage = "Erro ao tentar cadastrar a campanha. Verifique conflito de datas";
+
+      if(error.response?.data) {
+        if (typeof error.response.data === 'string') {
+          errorMessage = error.response.data; 
+        } else if (error.response.data.message) {
+          errorMessage = error.response.data.message; 
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error; 
+        }
+      }
+
     } finally {
       setIsSubmitting(false);
     }
@@ -390,10 +407,67 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
             </div>
 
             {/* Conteúdo da Gaveta */}
+            {/* Conteúdo da Gaveta */}
             <div className="flex-1 overflow-y-auto p-8">
               
-              {/* 🚀 Usamos a nossa nova trava que aceita OCUPADO e RESERVADO */}
-              {isFaceBusy ? (
+              {isCreatingCampaign ? (
+                // 🚀 MODO 1: FORMULÁRIO (Aparece tanto se estiver livre quanto ocupado)
+                <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300 h-full">
+                  <div className="flex items-center gap-2 mb-6">
+                    <button onClick={() => setIsCreatingCampaign(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                      <ChevronLeft size={20} />
+                    </button>
+                    <h3 className="text-lg font-bold text-slate-800">Nova Campanha</h3>
+                  </div>
+
+                  <div className="space-y-4 flex-1">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Cliente</label>
+                      <select 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        value={campaignForm.customerId}
+                        onChange={(e) => setCampaignForm({...campaignForm, customerId: e.target.value})}
+                      >
+                        <option value="">Selecione o cliente...</option>
+                        {customers.map(c => (
+                          <option key={c.id} value={c.id}>{c.fantasyName} - {c.cnpj}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Início</label>
+                        <input type="date" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          value={campaignForm.startDate} onChange={(e) => setCampaignForm({...campaignForm, startDate: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Término</label>
+                        <input type="date" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          value={campaignForm.endDate} onChange={(e) => setCampaignForm({...campaignForm, endDate: e.target.value})} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Valor do Contrato (R$)</label>
+                      <input type="number" placeholder="Ex: 5000.00" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        value={campaignForm.monthlyValue} onChange={(e) => setCampaignForm({...campaignForm, monthlyValue: e.target.value})} />
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-slate-100 mt-6">
+                    <button 
+                      className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all disabled:opacity-50"
+                      onClick={handleCreateCampaign}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Processando..." : "Confirmar Campanha"}
+                    </button>
+                  </div>
+                </div>
+                
+              ) : isFaceBusy ? (
+                // 🚀 MODO 2: FACE OCUPADA/RESERVADA
                 <div className="space-y-8">
                   <section>
                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
@@ -401,24 +475,23 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
                     </h3>
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
                       <div className="flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center text-xl shadow-sm">
-                          🥤
+                        <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-black text-xl shadow-sm">
+                          {activeCampaign?.customerName.charAt(0).toUpperCase()}
                         </div>
                         <div>
                           <p className="text-sm text-slate-500">Cliente</p>
-                          {/* 🚀 Trocamos selectedFace.campaign por activeCampaign */}
-                          <p className="font-bold text-slate-800">{activeCampaign.customerName}</p>
+                          <p className="font-bold text-slate-800">{activeCampaign?.customerName}</p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 mb-6">
                         <div className="space-y-1">
                           <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter leading-none">Início</p>
-                          <p className="text-sm font-semibold flex items-center gap-1.5"><Calendar size={14} className="text-slate-400"/> {activeCampaign.startDate}</p>
+                          <p className="text-sm font-semibold flex items-center gap-1.5"><Calendar size={14} className="text-slate-400"/> {activeCampaign?.startDate}</p>
                         </div>
                         <div className="space-y-1">
                           <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter leading-none">Término</p>
-                          <p className="text-sm font-semibold flex items-center gap-1.5"><Calendar size={14} className="text-slate-400"/> {activeCampaign.endDate}</p>
+                          <p className="text-sm font-semibold flex items-center gap-1.5"><Calendar size={14} className="text-slate-400"/> {activeCampaign?.endDate}</p>
                         </div>
                       </div>
 
@@ -426,13 +499,13 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
                         <div className="flex justify-between items-end mb-2">
                           <p className="text-xs font-bold text-slate-600 uppercase tracking-tight">Vigência do contrato</p>
                           <p className="text-xs font-black text-blue-600 italic">
-                            {selectedFace.status === "RESERVADO" ? "Inicia em breve" : `Faltam ${activeCampaign.daysLeft} dias`}
+                            {selectedFace.status === "RESERVADO" ? "Inicia em breve" : `Faltam ${activeCampaign?.daysLeft} dias`}
                           </p>
                         </div>
                         <div className="w-full bg-slate-200 rounded-full h-2">
                           <div 
                             className="bg-blue-600 h-2 rounded-full transition-all duration-1000" 
-                            style={{ width: `${selectedFace.status === "RESERVADO" ? 0 : (1 - (activeCampaign.daysLeft / activeCampaign.totalDays)) * 100}%` }}
+                            style={{ width: `${selectedFace.status === "RESERVADO" ? 0 : (1 - ((activeCampaign?.daysLeft || 0) / (activeCampaign?.totalDays || 1))) * 100}%` }}
                           ></div>
                         </div>
                       </div>
@@ -448,98 +521,53 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
                           </div>
                           <div>
                             <p className="text-[10px] text-emerald-700 font-bold uppercase">Valor Mensal</p>
-                            <p className="text-lg font-bold text-emerald-900">{activeCampaign.contractValue}</p>
+                            <p className="text-lg font-bold text-emerald-900">{activeCampaign?.contractValue}</p>
                           </div>
                         </div>
                         <button className="text-emerald-700 hover:underline text-xs font-bold">Ver NF-e</button>
                      </div>
                   </section>
 
-                  <div className="grid grid-cols-2 gap-3 pt-4">
-                    <button className="flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 rounded-xl text-slate-700 font-bold text-sm hover:bg-slate-50 transition-all">
-                      <Clock size={16} /> Histórico
+                  {/* 🚀 BOTÕES DE AÇÃO PARA FACE OCUPADA */}
+                  <div className="pt-6 border-t border-slate-200 mt-8">
+                    <button 
+                      onClick={() => setIsCreatingCampaign(true)}
+                      className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                    >
+                      <span className="text-xl">+</span> Agendar Campanha Futura
                     </button>
-                    <button className="flex items-center justify-center gap-2 py-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 font-bold text-sm hover:bg-rose-100 transition-all">
-                      <AlertCircle size={16} /> Baixa
+                    <button 
+                      onClick={() => setShowCalendarModal(true)}
+                      className="w-full mt-3 flex items-center justify-center gap-2 py-3 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-700 font-bold text-sm hover:bg-indigo-100 transition-all"
+                    >
+                      <Calendar size={16} /> Ver Calendário Completo
                     </button>
                   </div>
                 </div>
+
               ) : (
                 <div className="h-full flex flex-col py-6">
-                  {!isCreatingCampaign ? (
-                    <div className="flex-1 flex flex-col items-center justify-center text-center">
-                      <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-6 text-4xl shadow-inner border border-emerald-100">🌿</div>
-                      <h3 className="text-xl font-bold text-slate-800 mb-2">Espaço Livre</h3>
-                      <p className="text-slate-500 text-sm mb-8 max-w-[280px]">
-                        Não há campanhas ativas para esta face. Você pode criar uma reserva ou uma nova campanha direta.
-                      </p>
-                      <div className="w-full space-y-3">
-                        <button 
-                          onClick={() => setIsCreatingCampaign(true)}
-                          className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
-                        >
-                          <span className="text-xl">+</span> Nova Campanha
-                        </button>
-                        <button className="w-full py-4 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-all">
-                          Fazer Reserva
-                        </button>
-                      </div>
+                  <div className="flex-1 flex flex-col items-center justify-center text-center">
+                    <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-6 text-4xl shadow-inner border border-emerald-100">🌿</div>
+                    <h3 className="text-xl font-bold text-slate-800 mb-2">Espaço Livre</h3>
+                    <p className="text-slate-500 text-sm mb-8 max-w-[280px]">
+                      Não há campanhas ativas para esta face. Você pode criar uma reserva ou uma nova campanha direta.
+                    </p>
+                    <div className="w-full space-y-3">
+                      <button 
+                        onClick={() => setIsCreatingCampaign(true)}
+                        className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+                      >
+                        <span className="text-xl">+</span> Nova Campanha
+                      </button>
+                      <button 
+                        onClick={() => setShowCalendarModal(true)}
+                        className="w-full flex items-center justify-center gap-2 py-4 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-all"
+                      >
+                        <Calendar size={16} /> Ver Calendário
+                      </button>
                     </div>
-                  ) : (
-                    <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300">
-                      <div className="flex items-center gap-2 mb-6">
-                        <button onClick={() => setIsCreatingCampaign(false)} className="text-slate-400 hover:text-slate-600 p-1">
-                          <ChevronLeft size={20} />
-                        </button>
-                        <h3 className="text-lg font-bold text-slate-800">Nova Campanha</h3>
-                      </div>
-
-                      <div className="space-y-4 flex-1">
-                        <div>
-                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Cliente</label>
-                          <select 
-                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            value={campaignForm.customerId}
-                            onChange={(e) => setCampaignForm({...campaignForm, customerId: e.target.value})}
-                          >
-                            <option value="">Selecione o cliente...</option>
-                            {customers.map(c => (
-                              <option key={c.id} value={c.id}>{c.fantasyName} - {c.cnpj}</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Início</label>
-                            <input type="date" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                              value={campaignForm.startDate} onChange={(e) => setCampaignForm({...campaignForm, startDate: e.target.value})} />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Término</label>
-                            <input type="date" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                              value={campaignForm.endDate} onChange={(e) => setCampaignForm({...campaignForm, endDate: e.target.value})} />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Valor do Contrato (R$)</label>
-                          <input type="number" placeholder="Ex: 5000.00" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                            value={campaignForm.monthlyValue} onChange={(e) => setCampaignForm({...campaignForm, monthlyValue: e.target.value})} />
-                        </div>
-                      </div>
-
-                      <div className="pt-6 border-t border-slate-100 mt-6">
-                        <button 
-                          className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all disabled:opacity-50"
-                          onClick={handleCreateCampaign}
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? "Processando..." : "Confirmar Campanha"}
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
               )}
             </div>
@@ -559,6 +587,109 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
       <style dangerouslySetInnerHTML={{__html: `
         .clip-base { clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%); }
       `}} />
+      {showCalendarModal && selectedFace && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowCalendarModal(false)}></div>
+          
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl z-10 overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header do Modal */}
+            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800">Calendário de Ocupação</h2>
+                <p className="text-sm text-slate-500">{selectedFace.name} • {panelData.id}</p>
+              </div>
+              <button onClick={() => setShowCalendarModal(false)} className="p-2 hover:bg-slate-200 rounded-full text-slate-400 transition-colors">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            {/* Controles de Mês */}
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-8">
+                <button 
+                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
+                  className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 font-bold border border-slate-200"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <h3 className="text-lg font-bold text-slate-800 capitalize">
+                  {currentMonth.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })}
+                </h3>
+                <button 
+                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
+                  className="p-2 hover:bg-slate-100 rounded-lg text-slate-600 font-bold border border-slate-200"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+
+              {/* Grid do Calendário */}
+              <div className="grid grid-cols-7 gap-2 mb-2">
+                {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
+                  <div key={day} className="text-center text-xs font-black text-slate-400 uppercase tracking-wider py-2">
+                    {day}
+                  </div>
+                ))}
+              </div>
+              
+              <div className="grid grid-cols-7 gap-2">
+                {Array.from({ length: new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay() }).map((_, i) => (
+                  <div key={`empty-${i}`} className="h-12 rounded-xl bg-slate-50/50"></div>
+                ))}
+                
+                {Array.from({ length: new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate() }).map((_, i) => {
+                  const day = i + 1;
+                  const currentDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+                  
+                  // Lógica: Verifica se este dia pertence a alguma campanha desta face
+                  let dayColor = "bg-slate-50 border-slate-100 text-slate-700 hover:border-blue-300";
+                  let campaignInfo = null;
+
+                  if (selectedFace.campaigns) {
+                    for (const camp of selectedFace.campaigns) {
+                      const start = parseDateBR(camp.startDate);
+                      const end = parseDateBR(camp.endDate);
+                      
+                      if (currentDate >= start && currentDate <= end) {
+                        dayColor = "bg-rose-500 text-white border-rose-600 shadow-md shadow-rose-200";
+                        campaignInfo = camp;
+                        break; // Se achou uma campanha, pinta e para de procurar
+                      }
+                    }
+                  }
+
+                  return (
+                    <div 
+                      key={day} 
+                      className={`relative h-12 rounded-xl border flex items-center justify-center font-bold text-sm cursor-default transition-all group ${dayColor}`}
+                    >
+                      {day}
+                      {/* Tooltip Hover para mostrar quem é o cliente no dia */}
+                      {campaignInfo && (
+                        <div className="absolute bottom-full mb-2 hidden group-hover:block w-max bg-slate-900 text-white text-[10px] py-1 px-3 rounded shadow-xl z-10">
+                          {campaignInfo.customerName}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Legenda */}
+              <div className="mt-8 pt-6 border-t border-slate-100 flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-slate-50 border border-slate-200"></div>
+                  <span className="text-xs font-bold text-slate-500 uppercase">Dia Livre</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded bg-rose-500 border border-rose-600"></div>
+                  <span className="text-xs font-bold text-slate-500 uppercase">Campanha Ativa/Reservada</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
