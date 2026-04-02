@@ -1,265 +1,115 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
 import { api } from "@/src/services/api";
 import Link from "next/link";
+import { 
+  Map, 
+  CalendarRange, 
+  Users, 
+  Sparkles,
+  ArrowRight,
+  Clock
+} from "lucide-react";
 
+export default function OverviewPage() {
+  const [userName, setUserName] = useState("Usuário");
+  const [greeting, setGreeting] = useState("Olá");
 
-export default function DashboardPage() {
-  const router = useRouter();
+  useEffect(() => {
+    // Busca os dados do usuário logado para dar boas-vindas
+    api.get("/api/users/me")
+      .then(response => {
+        // Pega só o primeiro nome
+        const firstName = response.data.name.split(" ")[0];
+        setUserName(firstName);
+      })
+      .catch(console.error);
 
-  // Panels State
-  const [panels, setPanels] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Creation Form States
-  const [addressName, setAddressName] = useState("");
-  const [cityName, setCityName] = useState("");
-  const [latitudeValue, setLatitudeValue] = useState(0);
-  const [longitude, setLongitude] = useState(0.0);
-  const [panelType, setPanelType] = useState("OUTDOOR");
-  const [creating, setCreating] = useState(false);
-
-  const [error, setError] = useState("");
-
-  
-    const loadData = async () => { 
-      try {
-        const response = await api.get("/api/panels");
-        setPanels(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar painéis:", error);
-        setError("Não foi possível carregar os dados. Sua sessão pode ter expirado");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    useEffect(() => {
-      loadData();
-    }, []);
-
-
-// LOGOUT FUNCTION
-  const handleLogout = () => {
-    Cookies.remove("saas_token");
-    router.push("/");
-  };
-
-  // CREATE PANEL FUNCTION
-  const handleCreatePanel = async (e:React.SyntheticEvent) => {
-    e.preventDefault();
-    setCreating(true);
-
-    try{
-      await api.post("/api/panels", {
-        address: addressName,
-        city: cityName,
-        latitude: latitudeValue,
-        longitude: longitude,
-        panelType: panelType
-      });
-
-      setCityName("");
-      setAddressName("");
-      setLatitudeValue(0.0);
-      setLongitude(0.0);
-      setPanelType("");
-
-      loadData();
-
-    } catch (error){
-      console.error("Erro ao criar painel:", error);
-      alert("Erro ao criar o painel. Verifique o console.");
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  // DELETE PANEL FUNCTION
-  const handleDeletePanel = async (id: number) => {
-    if (!window.confirm("Tem certeza que deseja excluir este painel? Esta ação não pode ser desfeita.")){
-      return;
-    }
-
-    try {
-      await api.delete(`/api/panels/${id}`);
-
-      loadData();
-    } catch (error) {
-      console.error("Erro ao deletar painel:", error);
-      alert("Erro ao tentar excluir o painel");
-    }
-
-  };
+    // Lógica simples de Bom dia / Boa tarde / Boa noite
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) setGreeting("Bom dia");
+    else if (hour >= 12 && hour < 18) setGreeting("Boa tarde");
+    else setGreeting("Boa noite");
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-
-        {/* Dashboard Header */}
-        <div className="flex justify-between items-center bg-white p-6 rounded-lg shadow-sm mb-8 border border-gray-100">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Painel de Gestão OOH</h1>
-            <p className="text-sm text-gray-500">Bem vindo(a) ao seu sistema.</p>
+    <div className="min-h-screen bg-[#F8FAFC] p-6 md:p-10 font-sans text-slate-900">
+      <div className="max-w-6xl mx-auto">
+        
+        {/* Banner de Boas-Vindas */}
+        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-10 mb-10 text-white shadow-xl shadow-slate-900/10 relative overflow-hidden">
+          {/* Elementos decorativos no fundo */}
+          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-blue-500 rounded-full blur-[80px] opacity-20 pointer-events-none"></div>
+          <div className="absolute bottom-0 right-40 -mb-10 w-40 h-40 bg-purple-500 rounded-full blur-[60px] opacity-20 pointer-events-none"></div>
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 text-blue-400 font-bold tracking-wider uppercase text-xs mb-3">
+              <Sparkles size={14} />
+              <span>Bem-vindo ao Setdoor</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black mb-4 tracking-tight">
+              {greeting}, {userName}.
+            </h1>
+            <p className="text-slate-300 text-lg max-w-xl font-medium">
+              O que você gostaria de gerenciar hoje? Acesse rapidamente seu inventário, campanhas ou base de clientes.
+            </p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-50 text-red-600 font-medium rounded-md hover:bg-red-100 transition-colors"
-            >
-              Sair do Sistema
-          </button>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Cadastrar Novo Painel</h2>
-          <form onSubmit={handleCreatePanel} className="flex gap-4 items-end">
-            {/* Div Address */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1"> Endereço </label>
-              <input
-                type="text"
-                required
-                value={addressName}
-                onChange={(e) => setAddressName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outilne-none focus:ring-blue-500 focus:border-blue-500 text-gray-500"
-                placeholder="Ex: 24 de Outubro, 1201 x Cel. Bordini"
-                />
-            </div>
-            {/* Div City Name */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
-              <input
-                type="text"
-                required
-                value={cityName}
-                onChange={(e) => setCityName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-500"
-                placeholder="Ex: Porto Alegre, RS"
-              />
-            </div>
-            {/* Div Latitude */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
-              <input
-                type="number"
-                step="any"
-                required
-                value={latitudeValue}
-                onChange={(e) => setLatitudeValue(parseFloat(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-500"
-                placeholder="Ex: -30.0346"
-              />
-            </div>
-            {/* Div Longetude */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Longetude</label>
-              <input
-                type="number"
-                step="any"
-                required
-                value={longitude}
-                onChange={(e) => setLongitude(parseFloat(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-500"
-                placeholder="Ex: -51.2177"
-              />
-            </div>
-             {/* Div Type (Dropdown*/}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-              <select
-                required
-                value={panelType}
-                onChange={(e) => setPanelType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-500"
-              >
-                <option value="OUTDOOR">Outdoor</option>
-                <option value="FRONT_LIGHT">Front Light</option>
-                <option value="TRIEDRO">Triedro</option>
-                <option value="LED">LED</option>
-                <option value="EMPENA">Empena</option>
-                <option value="RODOVIARIO">Rodoviário</option>
-              </select>
-            </div>
-            <button
-              type="submit"
-              disabled={creating}
-              className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
-              >
-                {creating ? "Salvando..." : "Cadastrar"}
-            </button>
-          </form>
+        {/* Acesso Rápido (Quick Links) */}
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+            Acesso Rápido
+          </h2>
         </div>
 
-         {/* Content Area (Panel Listing) */}
-         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Meus Painéis</h2>
-
-          {loading ?(
-            <p className="text-gray-500">Carregando dados do servidor...</p>
-          ) : error ? (
-            <p className="text-red-500">{error}</p>
-          ) : panels.length === 0 ? (
-            <p className="text-gray-500 italic">Nenhum painel encontrado.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {panels.map((panel, index) => (
-                <div key={panel.id || index} className="border border-gray-200 rounded-xl bg-white hover:shadow-lg transition-shadow overflow-hidden">
-                  
-                  {/* Image Placeholder */}
-                  <div className="h-40 bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center text-slate-400 relative">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-xs font-medium tracking-wide">Imagem em breve</span>
-                  </div>
-
-                  {/* Card Body */}
-                  <div className="p-5">
-                    {/* Header com título e lixeira */}
-                    <div className="flex justify-between items-center mb-3">
-                      <div>
-                        <h3 className="font-bold text-gray-800">Painel #{panel.id}</h3>
-                        <span className="text-xs text-gray-400">{panel.identificationCode}</span>
-                      </div>
-                      <button
-                        onClick={() => handleDeletePanel(panel.id)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Excluir painel"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-
-                    {/* Info */}
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <p><span className="font-semibold text-gray-700">Cidade:</span> {panel.city}</p>
-                      <p><span className="font-semibold text-gray-700">Endereço:</span> {panel.address}</p>
-                      <p><span className="font-semibold text-gray-700">GPS:</span> {panel.latitude}, {panel.longitude}</p>
-                    </div>
-
-                    <div className="mt-3">
-                      <span className="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full text-xs font-medium">
-                        {panel.type}
-                      </span>
-                    </div>
-                    <Link 
-                      href={`/dashboard/panel/${panel.id}`}
-                      className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1 rounded transition-colors text-sm mr-2 font-medium"
-                    >
-                      Ver Detalhes
-                    </Link>
-                  </div>
-                </div>
-              ))}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Atalho 1: Inventário */}
+          <Link href="/dashboard/panels" className="group bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Map size={28} />
             </div>
-          )}
-         </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">Inventário (Painéis)</h3>
+            <p className="text-sm text-slate-500 mb-6 line-clamp-2">
+              Visualize seus outdoors, frontlights e painéis de LED. Verifique a disponibilidade e o status das faces.
+            </p>
+            <div className="flex items-center gap-2 text-blue-600 font-bold text-sm">
+              Acessar Mapa <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Atalho 2: Campanhas */}
+          <Link href="/dashboard/campaigns" className="group bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+            <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <CalendarRange size={28} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">Campanhas</h3>
+            <p className="text-sm text-slate-500 mb-6 line-clamp-2">
+              Gerencie as veiculações atuais, agendamentos futuros e veja as datas de checking.
+            </p>
+            <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm">
+              Ver Calendário <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          {/* Atalho 3: Clientes */}
+          <Link href="/dashboard/customers" className="group bg-white p-8 rounded-3xl border border-slate-200/60 shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+            <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <Users size={28} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">Clientes e Agências</h3>
+            <p className="text-sm text-slate-500 mb-6 line-clamp-2">
+              Cadastre novas marcas, consulte contatos e gere acessos VIP para o Portal do Cliente.
+            </p>
+            <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+              Gerenciar Base <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+        </div>
+
       </div>
     </div>
   );

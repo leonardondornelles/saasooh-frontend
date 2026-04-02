@@ -13,7 +13,8 @@ import {
   Clock, 
   AlertCircle,
   ExternalLink,
-  Info
+  Info,
+  Plus
 } from "lucide-react";
 
 // --- Tipagens ---
@@ -407,24 +408,23 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
             </div>
 
             {/* Conteúdo da Gaveta */}
-            {/* Conteúdo da Gaveta */}
-            <div className="flex-1 overflow-y-auto p-8">
+            <div className="flex-1 overflow-y-auto p-8 relative bg-slate-50/30">
               
               {isCreatingCampaign ? (
-                // 🚀 MODO 1: FORMULÁRIO (Aparece tanto se estiver livre quanto ocupado)
+                // 🚀 MODO 1: FORMULÁRIO DE NOVA CAMPANHA
                 <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300 h-full">
                   <div className="flex items-center gap-2 mb-6">
-                    <button onClick={() => setIsCreatingCampaign(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                    <button onClick={() => setIsCreatingCampaign(false)} className="text-slate-400 hover:text-slate-600 p-1 bg-white rounded-full shadow-sm border border-slate-100">
                       <ChevronLeft size={20} />
                     </button>
-                    <h3 className="text-lg font-bold text-slate-800">Nova Campanha</h3>
+                    <h3 className="text-lg font-bold text-slate-800">Agendar Nova Campanha</h3>
                   </div>
 
                   <div className="space-y-4 flex-1">
                     <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Cliente</label>
                       <select 
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm"
                         value={campaignForm.customerId}
                         onChange={(e) => setCampaignForm({...campaignForm, customerId: e.target.value})}
                       >
@@ -438,136 +438,127 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Início</label>
-                        <input type="date" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        <input type="date" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm"
                           value={campaignForm.startDate} onChange={(e) => setCampaignForm({...campaignForm, startDate: e.target.value})} />
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Término</label>
-                        <input type="date" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        <input type="date" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm"
                           value={campaignForm.endDate} onChange={(e) => setCampaignForm({...campaignForm, endDate: e.target.value})} />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Valor do Contrato (R$)</label>
-                      <input type="number" placeholder="Ex: 5000.00" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Valor Mensal (R$)</label>
+                      <input type="number" placeholder="Ex: 5000.00" className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm"
                         value={campaignForm.monthlyValue} onChange={(e) => setCampaignForm({...campaignForm, monthlyValue: e.target.value})} />
                     </div>
                   </div>
 
-                  <div className="pt-6 border-t border-slate-100 mt-6">
+                  <div className="pt-6 border-t border-slate-200 mt-6 bg-slate-50/80 -mx-8 -mb-8 p-8">
                     <button 
                       className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all disabled:opacity-50"
                       onClick={handleCreateCampaign}
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? "Processando..." : "Confirmar Campanha"}
+                      {isSubmitting ? "Processando..." : "Confirmar Agendamento"}
                     </button>
                   </div>
                 </div>
                 
-              ) : isFaceBusy ? (
-                // 🚀 MODO 2: FACE OCUPADA/RESERVADA
-                <div className="space-y-8">
-                  <section>
-                    <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">
-                      {selectedFace.status === "RESERVADO" ? "Próxima Campanha" : "Campanha Atual"}
-                    </h3>
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
-                      <div className="flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-black text-xl shadow-sm">
-                          {activeCampaign?.customerName.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-sm text-slate-500">Cliente</p>
-                          <p className="font-bold text-slate-800">{activeCampaign?.customerName}</p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4 mb-6">
-                        <div className="space-y-1">
-                          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter leading-none">Início</p>
-                          <p className="text-sm font-semibold flex items-center gap-1.5"><Calendar size={14} className="text-slate-400"/> {activeCampaign?.startDate}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter leading-none">Término</p>
-                          <p className="text-sm font-semibold flex items-center gap-1.5"><Calendar size={14} className="text-slate-400"/> {activeCampaign?.endDate}</p>
-                        </div>
-                      </div>
-
-                      <div className="pt-4 border-t border-slate-200">
-                        <div className="flex justify-between items-end mb-2">
-                          <p className="text-xs font-bold text-slate-600 uppercase tracking-tight">Vigência do contrato</p>
-                          <p className="text-xs font-black text-blue-600 italic">
-                            {selectedFace.status === "RESERVADO" ? "Inicia em breve" : `Faltam ${activeCampaign?.daysLeft} dias`}
-                          </p>
-                        </div>
-                        <div className="w-full bg-slate-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-1000" 
-                            style={{ width: `${selectedFace.status === "RESERVADO" ? 0 : (1 - ((activeCampaign?.daysLeft || 0) / (activeCampaign?.totalDays || 1))) * 100}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </section>
-
-                  <section>
-                     <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Financeiro</h3>
-                     <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-emerald-500 text-white rounded-lg">
-                            <CheckCircle2 size={18} />
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-emerald-700 font-bold uppercase">Valor Mensal</p>
-                            <p className="text-lg font-bold text-emerald-900">{activeCampaign?.contractValue}</p>
-                          </div>
-                        </div>
-                        <button className="text-emerald-700 hover:underline text-xs font-bold">Ver NF-e</button>
-                     </div>
-                  </section>
-
-                  {/* 🚀 BOTÕES DE AÇÃO PARA FACE OCUPADA */}
-                  <div className="pt-6 border-t border-slate-200 mt-8">
+              ) : (
+                // 🚀 MODO 2: TIMELINE DE CAMPANHAS E AÇÕES
+                <div className="flex flex-col h-full animate-in fade-in duration-300">
+                  
+                  {/* Botões de Ação Rápidos */}
+                  <div className="grid grid-cols-2 gap-3 mb-8">
                     <button 
                       onClick={() => setIsCreatingCampaign(true)}
-                      className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                      className="flex items-center justify-center gap-2 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-md shadow-slate-200"
                     >
-                      <span className="text-xl">+</span> Agendar Campanha Futura
+                      <Plus size={16} /> Nova Reserva 
                     </button>
                     <button 
                       onClick={() => setShowCalendarModal(true)}
-                      className="w-full mt-3 flex items-center justify-center gap-2 py-3 bg-indigo-50 border border-indigo-100 rounded-xl text-indigo-700 font-bold text-sm hover:bg-indigo-100 transition-all"
+                      className="flex items-center justify-center gap-2 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-all shadow-sm"
                     >
-                      <Calendar size={16} /> Ver Calendário Completo
+                      <Calendar size={16} /> Calendário
                     </button>
                   </div>
-                </div>
 
-              ) : (
-                <div className="h-full flex flex-col py-6">
-                  <div className="flex-1 flex flex-col items-center justify-center text-center">
-                    <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mb-6 text-4xl shadow-inner border border-emerald-100">🌿</div>
-                    <h3 className="text-xl font-bold text-slate-800 mb-2">Espaço Livre</h3>
-                    <p className="text-slate-500 text-sm mb-8 max-w-[280px]">
-                      Não há campanhas ativas para esta face. Você pode criar uma reserva ou uma nova campanha direta.
-                    </p>
-                    <div className="w-full space-y-3">
-                      <button 
-                        onClick={() => setIsCreatingCampaign(true)}
-                        className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
-                      >
-                        <span className="text-xl">+</span> Nova Campanha
-                      </button>
-                      <button 
-                        onClick={() => setShowCalendarModal(true)}
-                        className="w-full flex items-center justify-center gap-2 py-4 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-all"
-                      >
-                        <Calendar size={16} /> Ver Calendário
-                      </button>
+                  <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <Clock size={14} /> Linha do Tempo da Face
+                  </h3>
+
+                  {(!selectedFace.campaigns || selectedFace.campaigns.length === 0) ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-center mt-10">
+                      <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-4 text-3xl shadow-inner border border-emerald-100">🌿</div>
+                      <h4 className="text-lg font-bold text-slate-800 mb-1">Face Totalmente Livre</h4>
+                      <p className="text-slate-500 text-sm max-w-[250px]">Nenhuma campanha ou reserva atrelada a este espaço no momento.</p>
                     </div>
-                  </div>
+                  ) : (
+                    // 🚀 A TIMELINE DE CAMPANHAS
+                    <div className="relative border-l-2 border-slate-200 ml-3 space-y-8 pb-10">
+                      
+                      {selectedFace.campaigns.map((camp, index) => {
+                        // Lógica simples para decidir o status visual (No futuro o Java manda isso direto)
+                        const isCurrent = camp.daysLeft > 0 && camp.daysLeft <= camp.totalDays;
+                        const isFuture = camp.daysLeft > camp.totalDays; // Exemplo didático
+                        
+                        return (
+                          <div key={index} className="relative pl-6 group">
+                            {/* Bolinha da Timeline */}
+                            <div className={`absolute -left-[11px] top-1 w-5 h-5 rounded-full border-4 border-white shadow-sm transition-colors ${
+                              isCurrent ? 'bg-rose-500' : isFuture ? 'bg-blue-500' : 'bg-slate-400'
+                            }`}></div>
+                            
+                            {/* Card da Campanha na Timeline */}
+                            <div className={`bg-white border rounded-2xl p-5 transition-shadow ${
+                              isCurrent ? 'border-rose-200 shadow-md shadow-rose-100/50' : 'border-slate-200 shadow-sm hover:shadow-md'
+                            }`}>
+                              
+                              <div className="flex justify-between items-start mb-3">
+                                <div>
+                                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">
+                                    {isCurrent ? 'Exibição Atual' : 'Reserva Futura'}
+                                  </p>
+                                  <h4 className="font-bold text-slate-800 text-base leading-tight">{camp.customerName}</h4>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-sm font-bold text-emerald-600">{camp.contractValue}</p>
+                                  <p className="text-[10px] text-slate-400 uppercase">/ mês</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-4 text-xs font-semibold text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                <div className="flex items-center gap-1.5"><Calendar size={12} className="text-slate-400"/> {camp.startDate}</div>
+                                <span className="text-slate-300">até</span>
+                                <div className="flex items-center gap-1.5"><Calendar size={12} className="text-slate-400"/> {camp.endDate}</div>
+                              </div>
+
+                              {isCurrent && (
+                                <div className="mt-4 pt-4 border-t border-slate-100">
+                                  <div className="flex justify-between items-end mb-2">
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">Progresso</p>
+                                    <p className="text-xs font-black text-rose-500">{camp.daysLeft} dias restantes</p>
+                                  </div>
+                                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                    <div 
+                                      className="bg-rose-500 h-full rounded-full" 
+                                      style={{ width: `${(1 - (camp.daysLeft / camp.totalDays)) * 100}%` }}
+                                    ></div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+
+                      {/* Bolinha final da timeline indicando futuro */}
+                      <div className="absolute -left-[7px] -bottom-2 w-3 h-3 rounded-full border-2 border-slate-300 bg-white"></div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
