@@ -69,7 +69,6 @@ export default function FinanceDashboardPage() {
   
   const [financeData, setFinanceData] = useState<any>(null);
   
-  // 🚀 NOVO: Estado para o Modal de Contratos
   const [showExpiringModal, setShowExpiringModal] = useState(false);
 
   useEffect(() => {
@@ -86,7 +85,6 @@ export default function FinanceDashboardPage() {
 
         const dashResp = await api.get("/api/finance/dashboard");
         
-        // 🚀 Ajusta os nomes gigantes no ranking antes de jogar no Recharts
         const formattedRanking = dashResp.data.ranking.map((r: any) => ({
           ...r,
           shortName: formatShortName(r.name)
@@ -254,14 +252,11 @@ export default function FinanceDashboardPage() {
                 <div className="h-full flex items-center justify-center text-slate-400 text-sm">Sem vendas registradas</div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  {/* 🚀 Ajustei margin.left para 10 e o width do YAxis para 100 para dar espaço aos nomes */}
                   <BarChart data={financeData.ranking} layout="vertical" margin={{ top: 0, right: 16, left: 10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} vertical={true} stroke="#e2e8f0" />
                     <XAxis type="number" hide />
-                    {/* 🚀 Usa o shortName para não quebrar o layout */}
                     <YAxis dataKey="shortName" type="category" axisLine={false} tickLine={false} tick={{ fill: "#475569", fontSize: 12, fontWeight: 600 }} width={100} />
                     <Tooltip formatter={(value) => typeof value === "number" ? formatCurrency(value) : ""} cursor={{ fill: "#f8fafc" }} contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 15px rgba(0,0,0,0.1)" }} />
-                    {/* 🚀 dataKey agora é "vendas" de verdade do teu banco de dados */}
                     <Bar dataKey="sales" fill="#10b981" radius={[0, 8, 8, 0]} barSize={20} />
                   </BarChart>
                 </ResponsiveContainer>
@@ -309,12 +304,9 @@ export default function FinanceDashboardPage() {
                   topExpiring.map((c: any, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-2xl">
                       <div>
-                        {/* 🚀 c.customerName em vez de c.cliente */}
                         <p className="text-sm font-semibold text-slate-700 line-clamp-1">{c.customerName}</p>
-                        {/* 🚀 c.panelsCount e c.monthlyValue */}
                         <p className="text-xs text-slate-400">{c.panelsCount} painel{c.panelsCount > 1 ? "is" : ""} · {formatCurrency(c.monthlyValue)}</p>
                       </div>
-                      {/* 🚀 c.remainingDays */}
                       <span className={`text-xs font-bold px-2 py-1 border rounded-md ${getUrgencyStyle(c.urgency)}`}>{c.remainingDays}d</span>
                     </div>
                   ))
@@ -322,7 +314,7 @@ export default function FinanceDashboardPage() {
               </div>
             </div>
             
-            {/* 🚀 BOTÃO "VER MAIS" */}
+            {/* BOTÃO "VER MAIS" */}
             {financeData.expiringContracts.length > 3 && (
               <button 
                 onClick={() => setShowExpiringModal(true)}
@@ -346,7 +338,7 @@ export default function FinanceDashboardPage() {
           </div>
         </div>
 
-        {/* 🚀 MODAL "VER TODOS OS CONTRATOS A VENCER" */}
+        {/* MODAL "VER TODOS OS CONTRATOS A VENCER" */}
         {showExpiringModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowExpiringModal(false)}></div>
@@ -370,12 +362,10 @@ export default function FinanceDashboardPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${getUrgencyStyle(c.urgency)}`}>
-                          {/* 🚀 c.remainingDays */}
                           Vence em {c.remainingDays} dias
                         </span>
                         <span className="text-xs font-bold text-slate-400">Data exata: {formatDateBR(c.endDate)}</span>
                       </div>
-                      {/* 🚀 c.customerName */}
                       <h4 className="text-lg font-bold text-slate-800">{c.customerName}</h4>
                       <p className="text-sm text-slate-500 flex items-center gap-1.5 mt-1">
                         <MapPin size={14} className="text-slate-400" /> {c.panelAddress}
@@ -385,7 +375,6 @@ export default function FinanceDashboardPage() {
                     <div className="flex items-center justify-between md:flex-col md:items-end gap-3">
                       <div className="text-right">
                         <p className="text-xs font-bold text-slate-400 uppercase">Valor Mensal</p>
-                        {/* 🚀 c.monthlyValue */}
                         <p className="text-lg font-black text-slate-800">{formatCurrency(c.monthlyValue)}</p>
                       </div>
                       <Link 

@@ -62,7 +62,6 @@ export default function ExecutiveProfilePage() {
 
   const fetchPerformance = async () => {
     try {
-      // 🚀 Chama o teu novo endpoint Java seguro: GET /api/users/{id}/performance
       const response = await api.get(`/api/users/${id}/performance`);
       setData(response.data);
     } catch (error) {

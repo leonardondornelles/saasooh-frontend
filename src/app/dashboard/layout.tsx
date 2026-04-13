@@ -13,7 +13,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
 
-  // 🚀 Ao carregar o painel, descobre quem é o utilizador logado
   useEffect(() => {
     api.get("/api/users/me")
       .then(response => setUserRole(response.data.role))

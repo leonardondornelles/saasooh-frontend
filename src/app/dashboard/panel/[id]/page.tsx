@@ -411,7 +411,7 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
             <div className="flex-1 overflow-y-auto p-8 relative bg-slate-50/30">
               
               {isCreatingCampaign ? (
-                // 🚀 MODO 1: FORMULÁRIO DE NOVA CAMPANHA
+                // MODO 1: FORMULÁRIO DE NOVA CAMPANHA
                 <div className="flex-1 flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-300 h-full">
                   <div className="flex items-center gap-2 mb-6">
                     <button onClick={() => setIsCreatingCampaign(false)} className="text-slate-400 hover:text-slate-600 p-1 bg-white rounded-full shadow-sm border border-slate-100">
@@ -467,7 +467,7 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
                 </div>
                 
               ) : (
-                // 🚀 MODO 2: TIMELINE DE CAMPANHAS E AÇÕES
+                // MODO 2: TIMELINE DE CAMPANHAS E AÇÕES
                 <div className="flex flex-col h-full animate-in fade-in duration-300">
                   
                   {/* Botões de Ação Rápidos */}
@@ -497,11 +497,10 @@ export default function PanelDetailsPage({ params }: { params: Promise<{ id: str
                       <p className="text-slate-500 text-sm max-w-[250px]">Nenhuma campanha ou reserva atrelada a este espaço no momento.</p>
                     </div>
                   ) : (
-                    // 🚀 A TIMELINE DE CAMPANHAS
+                    // A TIMELINE DE CAMPANHAS
                     <div className="relative border-l-2 border-slate-200 ml-3 space-y-8 pb-10">
                       
                       {selectedFace.campaigns.map((camp, index) => {
-                        // Lógica simples para decidir o status visual (No futuro o Java manda isso direto)
                         const isCurrent = camp.daysLeft > 0 && camp.daysLeft <= camp.totalDays;
                         const isFuture = camp.daysLeft > camp.totalDays; // Exemplo didático
                         

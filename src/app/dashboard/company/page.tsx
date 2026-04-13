@@ -53,7 +53,7 @@ export default function CompanyHubPage() {
       const empResponse = await api.get("/api/users/company");
       setEmployees(empResponse.data);
 
-      // 🚀 3. Busca Métricas COM A URL CORRETA!
+      // 3. Busca Métricas COM A URL CORRETA!
       const metricsResp = await api.get("/api/users/company/metrics");
       setMetrics(metricsResp.data);
 
@@ -95,7 +95,7 @@ export default function CompanyHubPage() {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
-  // 🚀 TELA DE ACESSO NEGADO
+  // TELA DE ACESSO NEGADO
   if (accessDenied) {
     return (
       <div className="min-h-screen bg-slate-50/50 flex flex-col items-center justify-center p-6">
@@ -146,7 +146,7 @@ export default function CompanyHubPage() {
               <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
                 <Briefcase size={20} />
               </div>
-              {/* 🚀 BADE DINÂMICO COM A COR CERTA PARA CADA PLANO */}
+              {/* BADE DINÂMICO COM A COR CERTA PARA CADA PLANO */}
               <span className={`text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md ${
                   metrics.saasPlan === 'ENTERPRISE' ? 'text-amber-700 bg-amber-50 border border-amber-100' :
                   metrics.saasPlan === 'PRO' ? 'text-indigo-700 bg-indigo-50 border border-indigo-100' :
@@ -159,7 +159,7 @@ export default function CompanyHubPage() {
               <p className="text-sm font-medium text-slate-500 mb-1">Painéis Utilizados</p>
               
               {metrics.panelLimit === -1 ? (
-                // 🚀 LAYOUT PARA O PLANO ENTERPRISE (ILIMITADO)
+                // LAYOUT PARA O PLANO ENTERPRISE (ILIMITADO)
                 <div className="mt-2">
                   <div className="flex items-baseline gap-2 mb-1">
                     <h3 className="text-3xl font-bold text-slate-800">{metrics.totalPanels}</h3>
@@ -170,7 +170,7 @@ export default function CompanyHubPage() {
                   </p>
                 </div>
               ) : (
-                // 🚀 LAYOUT PARA BASIC E PRO
+                // LAYOUT PARA BASIC E PRO
                 <>
                   <div className="flex items-baseline gap-2 mb-3">
                     <h3 className="text-3xl font-bold text-slate-800">{metrics.totalPanels}</h3>
@@ -202,7 +202,7 @@ export default function CompanyHubPage() {
             </div>
             <div>
               <p className="text-sm font-medium text-slate-500 mb-1">MRR (Faturamento Ativo)</p>
-              {/* 🚀 FORMATADOR DE MOEDA APLICADO AO VALOR DO BANCO */}
+              {/* FORMATADOR DE MOEDA APLICADO AO VALOR DO BANCO */}
               <h3 className="text-3xl font-bold text-slate-800 mb-1">{formatCurrency(metrics.totalMrr)}</h3>
               <p className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
                 Soma de todas as campanhas
