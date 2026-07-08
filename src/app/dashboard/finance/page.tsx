@@ -28,11 +28,7 @@ const mockOccupancyData = [
   { praça: "Caxias do Sul", ocupacao: 74, total: 40, ativos: 30 },
   { praça: "Canoas", ocupacao: 61, total: 32, ativos: 20 },
 ];
-const mockPipelineData = [
-  { stage: "Propostas", count: 34, color: "#2563eb" },
-  { stage: "Negociação", count: 24, color: "#7c3aed" },
-  { stage: "Aprovados", count: 16, color: "#0891b2" },
-];
+
 const mockDelinquentClients = [
   { cliente: "Loja ABC", valor: 3200, diasAtraso: 45 },
   { cliente: "Distribuidora XYZ", valor: 2800, diasAtraso: 22 },
@@ -135,7 +131,9 @@ export default function FinanceDashboardPage() {
   const paineiAtivos = mockOccupancyData.reduce((s, p) => s + p.ativos, 0);
   const ocupacaoGeral = Math.round((paineiAtivos / totalPaineis) * 100);
   const totalInadimplencia = mockDelinquentClients.reduce((s, c) => s + c.valor, 0);
-  const maxPipeline = Math.max(...mockPipelineData.map((d) => d.count));
+  const maxPipeline = financeData.pipeline && financeData.pipeline.length > 0 
+    ? Math.max(...financeData.pipeline.map((d: any) => d.count), 1) 
+    : 1;
 
   // Pega apenas os 3 primeiros contratos para o Card
   const topExpiring = financeData.expiringContracts.slice(0, 3);
@@ -267,26 +265,25 @@ export default function FinanceDashboardPage() {
 
         {/* LINHA 3 */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-          {/* ... MOCKS DE OCUPAÇÃO E PIPELINE (MANTIDOS) ... */}
-          <div className="bg-white p-7 rounded-3xl border border-slate-200/60 shadow-sm">
-            <h3 className="text-base font-bold text-slate-800 mb-1">Ocupação por Praça</h3>
-            <div className="flex flex-col gap-4 mt-6">
-              {mockOccupancyData.map((item) => (
-                <div key={item.praça}>
-                  <div className="flex justify-between items-center mb-1.5"><span className="text-sm text-slate-600 font-medium">{item.praça}</span><span className={`text-xs font-bold ${getOccupancyTextColor(item.ocupacao)}`}>{item.ocupacao}%</span></div>
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden"><div className={`h-full rounded-full ${getOccupancyColor(item.ocupacao)}`} style={{ width: `${item.ocupacao}%` }} /></div>
-                </div>
-              ))}
-            </div>
-          </div>
-
+          {/* Pipeline de Contratos REAL */}
           <div className="bg-white p-7 rounded-3xl border border-slate-200/60 shadow-sm">
             <h3 className="text-base font-bold text-slate-800 mb-1">Pipeline de Contratos</h3>
             <div className="flex flex-col gap-3 mt-6">
-              {mockPipelineData.map((item) => (
+              {financeData.pipeline.map((item: any) => (
                 <div key={item.stage} className="flex items-center gap-3">
                   <span className="text-xs text-slate-500 w-20 text-right shrink-0">{item.stage}</span>
-                  <div className="flex-1 h-7 bg-slate-100 rounded-lg overflow-hidden"><div className="h-full rounded-lg flex items-center px-3 text-xs font-bold text-white" style={{ width: `${(item.count / maxPipeline) * 100}%`, backgroundColor: item.color }}>{item.count}</div></div>
+                  <div className="flex-1 h-7 bg-slate-100 rounded-lg overflow-hidden">
+                    <div 
+                      className="h-full rounded-lg flex items-center px-3 text-xs font-bold text-white transition-all duration-1000" 
+                      style={{ 
+                        width: `${(item.count / maxPipeline) * 100}%`, 
+                        backgroundColor: item.color,
+                        minWidth: item.count > 0 ? '1.5rem' : '0' // Garante que se tiver pelo menos 1, aparece um pedacinho da barra
+                      }}
+                    >
+                      {item.count > 0 ? item.count : ''}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
