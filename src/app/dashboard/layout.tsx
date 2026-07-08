@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const menuItems = [
     { name: "Visão Geral", icon: LayoutDashboard, href: "/dashboard" },
     { name: "Inventário (Painéis)", icon: Map, href: "/dashboard/panels" },
-    { name: "Campanhas", icon: CalendarRange, href: "/dashboard/campanhas" },
+    { name: "Campanhas", icon: CalendarRange, href: "/dashboard/campaigns" },
     { name: "Clientes e Agências", icon: Users, href: "/dashboard/customers" },
   ];
 
