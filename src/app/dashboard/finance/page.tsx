@@ -88,9 +88,15 @@ export default function FinanceDashboardPage() {
         
         setFinanceData({ ...dashResp.data, ranking: formattedRanking });
 
-      } catch (error) {
+      } catch (error: any) {
         console.error("Erro ao carregar painel financeiro", error);
-        setAccessDenied(true);
+        
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          setAccessDenied(true);
+        } else {
+          // Se for erro 500, mostra-te o aviso real!
+          alert("Erro no Backend Financeiro! Olha o log vermelho no terminal do Spring Boot.");
+        }
       } finally {
         setLoading(false);
       }
