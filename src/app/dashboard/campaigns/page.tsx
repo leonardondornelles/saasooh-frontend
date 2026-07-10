@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { api } from "@/src/services/api";
 import { 
   CalendarRange, Plus, Monitor, X, ExternalLink, 
-  Filter, CheckCircle2, AlertCircle, Ban
+  Filter, CheckCircle2, AlertCircle, Ban, Search
 } from "lucide-react";
 import Link from "next/link";
 
@@ -14,8 +14,9 @@ export default function CampaignHubPage() {
   const [panels, setPanels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Filtro de Status
+  // 🚀 NOVOS FILTROS: Status e Pesquisa de Cliente
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Estados do Modal de Criação Global
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -26,7 +27,7 @@ export default function CampaignHubPage() {
     customerId: "", faceId: "", startDate: "", endDate: "", monthlyValue: ""
   });
 
-  // 🚀 NOVOS: Estados do Modal de Evolução de Status
+  // Estados do Modal de Evolução de Status
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<any>(null);
   const [statusForm, setStatusForm] = useState({
@@ -70,7 +71,6 @@ export default function CampaignHubPage() {
     }
   };
 
-  // --- LÓGICA DE CRIAÇÃO ---
   const handleCreateCampaign = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -95,11 +95,10 @@ export default function CampaignHubPage() {
     }
   };
 
-  // --- 🚀 NOVA LÓGICA DE ATUALIZAÇÃO DE STATUS ---
   const openStatusModal = (campaign: any) => {
     setSelectedCampaign(campaign);
     setStatusForm({
-      status: campaign.status,
+      status: campaign.status === "APPROVED" ? "RESERVED" : campaign.status, // Fallback preventivo
       startDate: campaign.startDate || "",
       endDate: campaign.endDate || "",
       observations: campaign.observations || ""
@@ -119,8 +118,6 @@ export default function CampaignHubPage() {
       };
 
       const response = await api.put(`/api/campaigns/${selectedCampaign.id}/status`, payload);
-      
-      // Atualiza a tabela na hora com os dados que voltaram do Java
       setCampaigns(campaigns.map(c => c.id === selectedCampaign.id ? response.data : c));
       setShowStatusModal(false);
     } catch (error: any) {
@@ -136,9 +133,9 @@ export default function CampaignHubPage() {
       case "RESERVED": return "bg-blue-50 text-blue-700 border-blue-200";
       case "PROPOSAL": return "bg-slate-100 text-slate-600 border-slate-200";
       case "NEGOTIATION": return "bg-purple-50 text-purple-700 border-purple-200";
-      case "APPROVED": return "bg-teal-50 text-teal-700 border-teal-200";
       case "COMPLETED": return "bg-slate-100 text-slate-400 border-slate-200";
       case "LOST": return "bg-rose-50 text-rose-700 border-rose-200";
+      case "CANCELLED": return "bg-rose-100 text-rose-800 border-rose-300";
       default: return "bg-slate-50 text-slate-700 border-slate-200";
     }
   };
@@ -149,22 +146,23 @@ export default function CampaignHubPage() {
     return `${day}/${month}/${year}`;
   };
 
-  // Aplica o filtro
-  const displayedCampaigns = statusFilter === "ALL" 
-    ? campaigns 
-    : campaigns.filter(c => c.status === statusFilter);
+  // 🚀 LÓGICA DE FILTRO COMBINADA: Status + Nome do Cliente (Case Insensitive)
+  const displayedCampaigns = campaigns.filter(c => {
+    const matchesStatus = statusFilter === "ALL" || c.status === statusFilter;
+    const matchesSearch = c.customerName?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>;
 
-  // Lógica para mostrar campos dinâmicos no modal de status
-  const requiresDates = ["APPROVED", "RESERVED", "ACTIVE"].includes(statusForm.status);
+  const requiresDates = ["RESERVED", "ACTIVE"].includes(statusForm.status);
   const requiresObservation = statusForm.status === "LOST";
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] p-6 md:p-10 font-sans text-slate-900">
       <div className="max-w-7xl mx-auto">
         
-        {/* CABEÇALHO E FILTROS */}
+        {/* CABEÇALHO E ÁREA DE FILTROS */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
@@ -173,18 +171,30 @@ export default function CampaignHubPage() {
             <p className="text-slate-500 mt-1">Controle o funil comercial, agendamentos globais e veiculações ativas.</p>
           </div>
           
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            {/* 🚀 NOVA: Barra de Pesquisa por Cliente */}
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input 
+                type="text"
+                placeholder="Filtrar por cliente..."
+                className="w-full pl-9 pr-4 py-3 bg-white border border-slate-200/60 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm transition-all"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Filtro de Status Sem a Opção "APPROVED" */}
+            <div className="relative w-full sm:w-auto">
               <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select 
-                className="pl-9 pr-4 py-3 bg-white border border-slate-200/60 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full pl-9 pr-8 py-3 bg-white border border-slate-200/60 rounded-xl text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500/20 shadow-sm appearance-none"
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
               >
                 <option value="ALL">Todas as Fases</option>
                 <option value="PROPOSAL">Apenas Propostas</option>
                 <option value="NEGOTIATION">Em Negociação</option>
-                <option value="APPROVED">Aprovadas</option>
                 <option value="RESERVED">Reservadas (Futuro)</option>
                 <option value="ACTIVE">Ativas (Rodando)</option>
                 <option value="COMPLETED">Concluídas</option>
@@ -194,7 +204,7 @@ export default function CampaignHubPage() {
             
             <button 
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md shadow-blue-600/10 active:scale-95"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-bold text-sm transition-all shadow-md shadow-blue-600/10 active:scale-95 shrink-0"
             >
               <Plus size={18} /> Nova Campanha
             </button>
@@ -206,7 +216,7 @@ export default function CampaignHubPage() {
           {displayedCampaigns.length === 0 ? (
             <div className="p-20 text-center flex flex-col items-center justify-center text-slate-400">
               <Ban size={48} className="mb-4 opacity-50" />
-              <p>Nenhuma campanha encontrada com estes filtros.</p>
+              <p className="font-medium">Nenhuma campanha encontrada com estes filtros.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -245,14 +255,14 @@ export default function CampaignHubPage() {
                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(camp.monthlyValue || 0)}
                       </td>
                       
-                      {/* BOTÃO INTELIGENTE DE STATUS */}
+                      {/* STATUS CLICÁVEL */}
                       <td className="px-6 py-4">
                         <button 
                           onClick={() => camp.status !== "COMPLETED" && openStatusModal(camp)}
                           disabled={camp.status === "COMPLETED"}
                           className={`px-3 py-1.5 border rounded-xl text-xs font-bold uppercase tracking-wider transition-all 
                             ${getStatusColorClass(camp.status)} 
-                            ${camp.status === "COMPLETED" ? 'cursor-not-allowed opacity-70' : 'hover:scale-105 hover:shadow-md'}`}
+                            ${camp.status === "COMPLETED" ? 'cursor-not-allowed opacity-60' : 'hover:scale-105 hover:shadow-sm'}`}
                         >
                           {camp.status} {camp.status !== "COMPLETED" && " ▾"}
                         </button>
@@ -271,9 +281,7 @@ export default function CampaignHubPage() {
           )}
         </div>
 
-        {/* =========================================
-            MODAL 1: CRIAÇÃO DE CAMPANHA (MANTIDO)
-            ========================================= */}
+        {/* MODAL: CRIAÇÃO DE CAMPANHA */}
         {showCreateModal && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowCreateModal(false)}></div>
@@ -333,7 +341,7 @@ export default function CampaignHubPage() {
         )}
 
         {/* =========================================
-            🚀 MODAL 2: EVOLUÇÃO DE FUNIL (STATUS)
+            🚀 MODAL: EVOLUÇÃO DE STATUS (SEM APPROVED)
             ========================================= */}
         {showStatusModal && selectedCampaign && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
@@ -347,29 +355,50 @@ export default function CampaignHubPage() {
                 <button type="button" onClick={() => setShowStatusModal(false)} className="p-1 hover:bg-slate-100 rounded-full"><X size={20}/></button>
               </div>
 
-              {/* Escolha do Novo Status */}
+              {/* 🚀 LÓGICA CONDICIONAL DE BOTÕES */}
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Novo Estágio do Funil</label>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Novo Estágio</label>
                 <div className="grid grid-cols-2 gap-2">
-                  {["PROPOSAL", "NEGOTIATION", "APPROVED", "LOST"].map((s) => (
-                    <button
-                      key={s} type="button"
-                      onClick={() => setStatusForm({...statusForm, status: s})}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all
-                        ${statusForm.status === s ? getStatusColorClass(s) + ' ring-2 ring-offset-1 ring-slate-200' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                  
+                  {/* Se estiver no início, mostra o funil de vendas normal */}
+                  {(selectedCampaign.status === "PROPOSAL" || selectedCampaign.status === "NEGOTIATION") && (
+                    <>
+                      {["PROPOSAL", "NEGOTIATION", "RESERVED", "LOST"].map((s) => (
+                        <button
+                          key={s} type="button" onClick={() => setStatusForm({...statusForm, status: s})}
+                          className={`py-2.5 px-3 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all
+                            ${statusForm.status === s ? getStatusColorClass(s) + ' ring-2 ring-offset-1 ring-slate-200 font-black' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
+                        >
+                          {s === "RESERVED" ? "RESERVAR / WIN" : s}
+                        </button>
+                      ))}
+                    </>
+                  )}
+
+                  {/* Se já estiver fechada (RESERVED ou ACTIVE), só permite Cancelar (ou Concluir manualmente) */}
+                  {(selectedCampaign.status === "RESERVED" || selectedCampaign.status === "ACTIVE") && (
+                    <>
+                      <div className="col-span-2 p-3 bg-slate-50 border rounded-xl mb-2">
+                        <p className="text-xs text-slate-500 text-center">Esta campanha já está fechada e em operação.</p>
+                      </div>
+                      <button
+                        type="button" onClick={() => setStatusForm({...statusForm, status: "CANCELLED"})}
+                        className={`col-span-2 py-3 px-3 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all
+                          ${statusForm.status === "CANCELLED" ? getStatusColorClass("CANCELLED") + ' ring-2 ring-offset-1 ring-slate-200 font-black' : 'bg-white border-rose-200 text-rose-500 hover:bg-rose-50'}`}
+                      >
+                        CANCELAR CONTRATO ATIVO
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
-              {/* Regra 1: Exigir datas no Fechamento */}
-              {requiresDates && (
+              {/* Exige datas se mover para RESERVED */}
+              {statusForm.status === "RESERVED" && (
                 <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 space-y-4">
                   <div className="flex items-start gap-2 text-blue-700">
                     <CheckCircle2 size={16} className="mt-0.5" />
-                    <p className="text-xs font-semibold">Para aprovar ou reservar esta campanha, as datas de veiculação são obrigatórias.</p>
+                    <p className="text-xs font-semibold">Defina o período do contrato. Se iniciar hoje ou antes, o sistema ativará como ACTIVE automaticamente.</p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -386,16 +415,18 @@ export default function CampaignHubPage() {
                 </div>
               )}
 
-              {/* Regra 2: Exigir motivo na Perda */}
-              {requiresObservation && (
+              {/* Exige motivo se for LOST ou CANCELLED */}
+              {(statusForm.status === "LOST" || statusForm.status === "CANCELLED") && (
                 <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 space-y-3">
                   <div className="flex items-start gap-2 text-rose-700">
                     <AlertCircle size={16} className="mt-0.5" />
-                    <p className="text-xs font-semibold">Registe o motivo da perda para histórico comercial.</p>
+                    <p className="text-xs font-semibold">
+                      {statusForm.status === "LOST" ? "Justifique o motivo da perda da venda." : "Justifique o motivo do cancelamento do contrato."}
+                    </p>
                   </div>
                   <textarea 
                     required 
-                    placeholder="Ex: Cliente achou o valor alto / Fechou com a concorrência..."
+                    placeholder={statusForm.status === "LOST" ? "Ex: Cliente achou caro..." : "Ex: Cliente pediu rescisão de contrato..."}
                     className="w-full px-3 py-2 bg-white border border-rose-200 rounded-lg text-sm outline-none focus:border-rose-400 min-h-[80px]"
                     value={statusForm.observations} onChange={e => setStatusForm({...statusForm, observations: e.target.value})}
                   />
@@ -403,7 +434,7 @@ export default function CampaignHubPage() {
               )}
 
               <div className="pt-2 flex justify-end gap-3">
-                <button type="submit" disabled={isSubmitting} className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl text-sm hover:bg-slate-800 transition-colors disabled:opacity-50">
+                <button type="submit" disabled={isSubmitting || statusForm.status === selectedCampaign.status} className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl text-sm hover:bg-slate-800 transition-colors disabled:opacity-50">
                   {isSubmitting ? "A atualizar..." : "Confirmar Mudança"}
                 </button>
               </div>
