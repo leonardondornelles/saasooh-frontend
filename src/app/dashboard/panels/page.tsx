@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { api } from "@/src/services/api";
 import Link from "next/link";
-
+import { Search, Filter, MapPin, Monitor, X, ExternalLink } from "lucide-react";// 🚀 Novos ícones
 
 export default function PanelsPage() {
   const router = useRouter();
@@ -14,6 +13,10 @@ export default function PanelsPage() {
   // Panels State
   const [panels, setPanels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 🚀 NOVOS ESTADOS: Filtro e Pesquisa
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState("ALL");
 
   // Creation Form States
   const [addressName, setAddressName] = useState("");
@@ -25,32 +28,28 @@ export default function PanelsPage() {
 
   const [error, setError] = useState("");
 
-  
-    const loadData = async () => { 
-      try {
-        const response = await api.get("/api/panels");
-        setPanels(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar painéis:", error);
-        setError("Não foi possível carregar os dados. Sua sessão pode ter expirado");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadData = async () => { 
+    try {
+      const response = await api.get("/api/panels");
+      setPanels(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar painéis:", error);
+      setError("Não foi possível carregar os dados. Sua sessão pode ter expirado");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    useEffect(() => {
-      loadData();
-    }, []);
+  useEffect(() => {
+    loadData();
+  }, []);
 
-
-// LOGOUT FUNCTION
   const handleLogout = () => {
     Cookies.remove("saas_token");
     router.push("/");
   };
 
-  // CREATE PANEL FUNCTION
-  const handleCreatePanel = async (e:React.SyntheticEvent) => {
+  const handleCreatePanel = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setCreating(true);
 
@@ -67,115 +66,89 @@ export default function PanelsPage() {
       setAddressName("");
       setLatitudeValue(0.0);
       setLongitude(0.0);
-      setPanelType("");
+      setPanelType("OUTDOOR"); // Reseta para o padrão
 
       loadData();
-
     } catch (error){
       console.error("Erro ao criar painel:", error);
-      alert("Erro ao criar o painel. Verifique o console.");
+      alert("Erro ao criar o painel. Verifique se preencheu tudo corretamente.");
     } finally {
       setCreating(false);
     }
   };
 
-  // DELETE PANEL FUNCTION
   const handleDeletePanel = async (id: number) => {
     if (!window.confirm("Tem certeza que deseja excluir este painel? Esta ação não pode ser desfeita.")){
       return;
     }
-
     try {
       await api.delete(`/api/panels/${id}`);
-
       loadData();
     } catch (error) {
       console.error("Erro ao deletar painel:", error);
       alert("Erro ao tentar excluir o painel");
     }
-
   };
 
+  // 🚀 LÓGICA DE FILTRAGEM COMBINADA (Tipo + Endereço/Cidade)
+  const displayedPanels = panels.filter(panel => {
+    const matchesType = filterType === "ALL" || panel.type === filterType;
+    const term = searchQuery.toLowerCase();
+    const matchesSearch = 
+      (panel.city?.toLowerCase().includes(term)) || 
+      (panel.address?.toLowerCase().includes(term)) ||
+      (panel.identificationCode?.toLowerCase().includes(term)); // Bónus: pesquisa por ID do painel
+    
+    return matchesType && matchesSearch;
+  });
+
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-[#F8FAFC] p-6 md:p-10 font-sans text-slate-900">
       <div className="max-w-7xl mx-auto">
 
         {/* Dashboard Header */}
-        <div className="flex justify-between items-center bg-white p-6 rounded-lg shadow-sm mb-8 border border-gray-100">
+        <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm mb-8 border border-slate-200/60">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Painel de Gestão OOH</h1>
-            <p className="text-sm text-gray-500">Bem vindo(a) ao seu sistema.</p>
+            <h1 className="text-2xl font-bold text-slate-800">Gestão de Inventário (Painéis)</h1>
+            <p className="text-sm text-slate-500">Administre as suas localizações e faces.</p>
           </div>
           <button
             onClick={handleLogout}
-            className="px-4 py-2 bg-red-50 text-red-600 font-medium rounded-md hover:bg-red-100 transition-colors"
+            className="px-4 py-2 bg-rose-50 text-rose-600 font-bold rounded-xl hover:bg-rose-100 transition-colors text-sm"
             >
               Sair do Sistema
           </button>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Cadastrar Novo Painel</h2>
-          <form onSubmit={handleCreatePanel} className="flex gap-4 items-end">
-            {/* Div Address */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1"> Endereço </label>
-              <input
-                type="text"
-                required
-                value={addressName}
-                onChange={(e) => setAddressName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outilne-none focus:ring-blue-500 focus:border-blue-500 text-gray-500"
-                placeholder="Ex: 24 de Outubro, 1201 x Cel. Bordini"
-                />
+        {/* CADASTRAR NOVO PAINEL */}
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/60 mb-8">
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Cadastrar Novo Painel</h2>
+          <form onSubmit={handleCreatePanel} className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end">
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1"> Endereço </label>
+              <input type="text" required value={addressName} onChange={(e) => setAddressName(e.target.value)}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm font-medium"
+                placeholder="Ex: 24 de Outubro, 1201" />
             </div>
-            {/* Div City Name */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
-              <input
-                type="text"
-                required
-                value={cityName}
-                onChange={(e) => setCityName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-500"
-                placeholder="Ex: Porto Alegre, RS"
-              />
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Cidade</label>
+              <input type="text" required value={cityName} onChange={(e) => setCityName(e.target.value)}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm font-medium"
+                placeholder="Ex: Porto Alegre, RS" />
             </div>
-            {/* Div Latitude */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
-              <input
-                type="number"
-                step="any"
-                required
-                value={latitudeValue}
-                onChange={(e) => setLatitudeValue(parseFloat(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-500"
-                placeholder="Ex: -30.0346"
-              />
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">GPS</label>
+              <div className="flex gap-2">
+                <input type="number" step="any" required value={latitudeValue || ""} onChange={(e) => setLatitudeValue(parseFloat(e.target.value))}
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none" placeholder="Lat" />
+                <input type="number" step="any" required value={longitude || ""} onChange={(e) => setLongitude(parseFloat(e.target.value))}
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none" placeholder="Long" />
+              </div>
             </div>
-            {/* Div Longetude */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Longetude</label>
-              <input
-                type="number"
-                step="any"
-                required
-                value={longitude}
-                onChange={(e) => setLongitude(parseFloat(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-500"
-                placeholder="Ex: -51.2177"
-              />
-            </div>
-             {/* Div Type (Dropdown*/}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-              <select
-                required
-                value={panelType}
-                onChange={(e) => setPanelType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-500"
-              >
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Tipo</label>
+              <select required value={panelType} onChange={(e) => setPanelType(e.target.value)}
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm font-medium">
                 <option value="OUTDOOR">Outdoor</option>
                 <option value="FRONT_LIGHT">Front Light</option>
                 <option value="TRIEDRO">Triedro</option>
@@ -184,76 +157,113 @@ export default function PanelsPage() {
                 <option value="RODOVIARIO">Rodoviário</option>
               </select>
             </div>
-            <button
-              type="submit"
-              disabled={creating}
-              className="px-6 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
-              >
-                {creating ? "Salvando..." : "Cadastrar"}
+            <button type="submit" disabled={creating}
+              className="w-full px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 disabled:bg-blue-300 transition-colors text-sm">
+                {creating ? "A salvar..." : "Cadastrar"}
             </button>
           </form>
         </div>
 
-         {/* Content Area (Panel Listing) */}
-         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Meus Painéis</h2>
+         {/* ÁREA DE LISTAGEM COM FILTROS */}
+         <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200/60">
+          
+          {/* Cabeçalho da Lista e Barra de Filtros */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 className="text-lg font-bold text-slate-800">Meus Painéis</h2>
+              {!loading && !error && (
+                <p className="text-sm text-slate-500 mt-1">
+                  Exibindo <span className="font-bold text-blue-600">{displayedPanels.length}</span> de {panels.length} painéis
+                </p>
+              )}
+            </div>
 
+            <div className="flex flex-col sm:flex-row gap-3">
+              {/* Pesquisa de Endereço/Cidade */}
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <input 
+                  type="text"
+                  placeholder="Pesquisar rua ou cidade..."
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                />
+              </div>
+
+              {/* Filtro de Tipo */}
+              <div className="relative w-full sm:w-48">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <select 
+                  className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20 transition-all appearance-none"
+                  value={filterType}
+                  onChange={e => setFilterType(e.target.value)}
+                >
+                  <option value="ALL">Todos os Tipos</option>
+                  <option value="OUTDOOR">Outdoor</option>
+                  <option value="FRONT_LIGHT">Front Light</option>
+                  <option value="TRIEDRO">Triedro</option>
+                  <option value="LED">LED</option>
+                  <option value="EMPENA">Empena</option>
+                  <option value="RODOVIARIO">Rodoviário</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Renderização da Lista */}
           {loading ?(
-            <p className="text-gray-500">Carregando dados do servidor...</p>
+            <div className="flex justify-center items-center py-20"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div></div>
           ) : error ? (
-            <p className="text-red-500">{error}</p>
-          ) : panels.length === 0 ? (
-            <p className="text-gray-500 italic">Nenhum painel encontrado.</p>
+            <div className="bg-rose-50 text-rose-600 p-4 rounded-xl text-sm font-bold text-center">{error}</div>
+          ) : displayedPanels.length === 0 ? (
+            <div className="py-20 text-center flex flex-col items-center justify-center text-slate-400">
+              <MapPin size={48} className="mb-4 opacity-50" />
+              <p className="font-medium">Nenhum painel encontrado para esta pesquisa.</p>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {panels.map((panel, index) => (
-                <div key={panel.id || index} className="border border-gray-200 rounded-xl bg-white hover:shadow-lg transition-shadow overflow-hidden">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {displayedPanels.map((panel, index) => (
+                <div key={panel.id || index} className="border border-slate-200 rounded-2xl bg-white hover:shadow-lg transition-shadow overflow-hidden flex flex-col">
                   
                   {/* Image Placeholder */}
-                  <div className="h-40 bg-gradient-to-br from-slate-100 to-slate-200 flex flex-col items-center justify-center text-slate-400 relative">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-2 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-xs font-medium tracking-wide">Imagem em breve</span>
+                  <div className="h-36 bg-slate-100 flex flex-col items-center justify-center text-slate-400 relative">
+                    <Monitor className="h-10 w-10 mb-2 text-slate-300" strokeWidth={1.5} />
                   </div>
 
                   {/* Card Body */}
-                  <div className="p-5">
-                    {/* Header com título e lixeira */}
-                    <div className="flex justify-between items-center mb-3">
+                  <div className="p-5 flex-1 flex flex-col">
+                    <div className="flex justify-between items-start mb-3">
                       <div>
-                        <h3 className="font-bold text-gray-800">Painel #{panel.id}</h3>
-                        <span className="text-xs text-gray-400">{panel.identificationCode}</span>
+                        <h3 className="font-bold text-slate-800 leading-tight">Painel #{panel.id}</h3>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{panel.identificationCode || 'S/ CÓDIGO'}</span>
                       </div>
                       <button
                         onClick={() => handleDeletePanel(panel.id)}
-                        className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-1.5 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
                         title="Excluir painel"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <X size={18} />
                       </button>
                     </div>
 
                     {/* Info */}
-                    <div className="space-y-1 text-sm text-gray-600">
-                      <p><span className="font-semibold text-gray-700">Cidade:</span> {panel.city}</p>
-                      <p><span className="font-semibold text-gray-700">Endereço:</span> {panel.address}</p>
-                      <p><span className="font-semibold text-gray-700">GPS:</span> {panel.latitude}, {panel.longitude}</p>
+                    <div className="space-y-1.5 text-sm text-slate-500 mb-4 flex-1">
+                      <p className="flex items-start gap-1.5"><MapPin size={14} className="mt-0.5 shrink-0"/> <span className="line-clamp-2">{panel.address}</span></p>
+                      <p className="pl-5 font-medium">{panel.city}</p>
                     </div>
 
-                    <div className="mt-3">
-                      <span className="bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full text-xs font-medium">
-                        {panel.type}
+                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+                      <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                        {panel.type?.replace('_', ' ')}
                       </span>
+                      <Link 
+                        href={`/dashboard/panel/${panel.id}`}
+                        className="text-blue-600 hover:text-blue-700 font-bold text-xs flex items-center gap-1"
+                      >
+                        Gerenciar Faces <ExternalLink size={12}/>
+                      </Link>
                     </div>
-                    <Link 
-                      href={`/dashboard/panel/${panel.id}`}
-                      className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-1 rounded transition-colors text-sm mr-2 font-medium"
-                    >
-                      Ver Detalhes
-                    </Link>
                   </div>
                 </div>
               ))}
