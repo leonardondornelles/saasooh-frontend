@@ -6,7 +6,7 @@ import { api } from "@/src/services/api";
 import Link from "next/link";
 import {
   TrendingUp, DollarSign, CreditCard, AlertTriangle, ArrowDownRight, 
-  Download, Calendar as CalendarIcon, LayoutGrid, AlertCircle, X, 
+  Download, Receipt, Calendar as CalendarIcon, LayoutGrid, AlertCircle, X, 
   MapPin, ExternalLink
 } from "lucide-react";
 import {
@@ -129,7 +129,6 @@ export default function FinanceDashboardPage() {
     );
   }
 
-  // 🚀 MAPEAMENTO DOS DADOS REAIS DO BACKEND (Substituindo os Mocks)
   const occupancyData = financeData.occupancyByCity || [];
   const revenueData = financeData.revenueEvolution || [];
   const delinquentClients = financeData.delinquencies || [];
@@ -160,9 +159,20 @@ export default function FinanceDashboardPage() {
             <h1 className="text-3xl font-bold text-slate-800">Visão Financeira</h1>
             <p className="text-slate-500 mt-1">Acompanhe faturamento, ocupação por praça, funil de propostas e equipe.</p>
           </div>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-slate-50 transition-all">
-            <Download size={18} /> Exportar Relatório
-          </button>
+          
+          {/* 🚀 Adicionámos uma div para agrupar os botões */}
+          <div className="flex gap-3">
+            <Link 
+              href="/dashboard/invoices" 
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white font-bold rounded-xl shadow-sm hover:bg-slate-800 transition-all"
+            >
+              <Receipt size={18} /> Contas a Receber
+            </Link>
+            
+            <button className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-slate-50 transition-all">
+              <Download size={18} /> Exportar
+            </button>
+          </div>
         </div>
 
         {/* METRICAS KPIs — Grid com 6 Blocos Gerenciais */}
