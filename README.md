@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🖥️ Setdoor — Frontend
+# Setdoor — Frontend
 
-**Painel de controle para empresas de mídia Out-of-Home (OOH)**
+**Control panel for Out-of-Home (OOH) media companies**
 
-Mapa interativo de inventário, funil comercial, calendário de ocupação e dashboard financeiro em uma única interface.
+Interactive inventory map, sales pipeline, occupancy calendar, and financial dashboard in a single interface.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
@@ -13,192 +13,192 @@ Mapa interativo de inventário, funil comercial, calendário de ocupação e das
 [![Recharts](https://img.shields.io/badge/Recharts-3-8884d8)](https://recharts.org/)
 [![Leaflet](https://img.shields.io/badge/Leaflet-1.9-199900?logo=leaflet&logoColor=white)](https://leafletjs.com/)
 
-[⚙️ Backend (Spring Boot)](https://github.com/leonardondornelles/saasooh-backend) · [Funcionalidades](#-funcionalidades) · [Stack](#-stack-tecnológica) · [Como rodar](#-como-rodar-localmente)
+[Backend (Spring Boot)](https://github.com/leonardondornelles/saasooh-backend) · [Features](#features) · [Tech stack](#tech-stack) · [Getting started](#getting-started-locally)
 
 </div>
 
 ---
 
-## 📖 Sobre o projeto
+## About the project
 
-**Setdoor** é a interface web de um SaaS B2B para empresas de **mídia Out-of-Home** — outdoors, front lights, triedros, telas de LED e painéis de rodovia — gerenciarem inventário, campanhas, clientes e faturamento em um único painel.
+**Setdoor** is the web interface of a B2B SaaS platform for Out-of-Home media companies — billboards, front lights, tri-vision structures, LED screens, and highway panels — to manage inventory, campaigns, customers, and billing from a single dashboard.
 
-O projeto nasceu de um problema real: a empresas de mídia exterior controlam tudo isso em planilhas. Este frontend consome a [API REST em Spring Boot](https://github.com/leonardondornelles/saasooh-backend) que construí em paralelo, e foi pensado para ser a ferramenta de trabalho diário de quem vende e opera painéis publicitários: do mapa de disponibilidade até o funil de vendas e a saúde financeira da operação.
-
----
-
-## 📸 Screenshots
-
-| Visão Geral | Dashboard Financeiro |
-|---|---|
-| ![Visão Geral](./screenshots/Visao_Geral.png) | ![Financeiro](./screenshots/Finances_WIP.png) |
-
-| Detalhe do Painel (faces + timeline) | Calendário de Ocupação |
-|---|---|
-| ![Painel](./screenshots/Panel_OUDOOR_CLIENTS.png) | ![Calendário](./screenshots/Panel_OUDOOR_CALENDAR.png) |
-
-| Gestão de Clientes | Hub da Empresa |
-|---|---|
-| ![Clientes](./screenshots/clients_Gestao.png) | ![Hub](./screenshots/ADMIN_hub.png) |
-
-| Inventário com mapa | Painel de LED |
-|---|---|
-| ![Inventário](./screenshots/Inventario_Paineis.png) | ![LED](./screenshots/Panel_LED.png) |
+The project was born from a real problem: out-of-home media companies manage all of this through spreadsheets. This frontend consumes the [Spring Boot REST API](https://github.com/leonardondornelles/saasooh-backend) built alongside it, and was designed to be the daily working tool for people who sell and operate advertising panels: from the availability map to the sales pipeline and the financial health of the operation.
 
 ---
 
-## ✨ Funcionalidades
+## Screenshots
 
-### 🏠 Landing page
-Página institucional pública (`/`) com seções de recursos, planos (Basic / Pro / Enterprise com preços) e CTAs para registro — o botão de cada plano já pré-preenche o formulário de cadastro via query string (`/register?plan=PRO`).
+| Overview | Financial Dashboard |
+|---|---|
+| ![Overview](./screenshots/Visao_Geral.png) | ![Finance](./screenshots/Finances_WIP.png) |
 
-### 📊 Visão Geral
-Saudação personalizada por horário (bom dia / boa tarde / boa noite) com o nome do usuário autenticado, e atalhos rápidos para Inventário, Campanhas e Clientes.
+| Panel Detail (faces + timeline) | Occupancy Calendar |
+|---|---|
+| ![Panel](./screenshots/Panel_OUDOOR_CLIENTS.png) | ![Calendar](./screenshots/Panel_OUDOOR_CALENDAR.png) |
 
-### 🗺️ Inventário de Painéis
-- Cadastro de painéis (endereço, cidade, coordenadas GPS, tipo, iluminação)
-- **Mapa interativo com Leaflet/OpenStreetMap**: cada painel aparece como marcador geolocalizado, com popup mostrando tipo, cidade, faces disponíveis e atalho direto para a página do painel; o mapa ajusta zoom e bounds automaticamente aos painéis filtrados
-- Listagem em cards com tipo, código de identificação e localização
-- Página de detalhe com representação visual interativa das faces por tipo de painel (Outdoor com 2 faces, LED com até 5, Empena com 1, etc.)
-- Clique na face abre uma sidebar com status (ocupado / disponível / reservado), cliente atual, valor mensal, datas de início/fim e barra de progresso da campanha
-- Ações rápidas: Nova Reserva e Calendário por face
+| Customer Management | Company Hub |
+|---|---|
+| ![Customers](./screenshots/clients_Gestao.png) | ![Hub](./screenshots/ADMIN_hub.png) |
 
-### 📆 Calendário de Ocupação
-- Modal de calendário mensal por face da campanha
-- Dias marcados conforme status da campanha (ativa/reservada vs. disponível)
-- Navegação entre meses
-
-### 🧾 Hub de Campanhas (Funil Comercial)
-- Tabela central com todas as campanhas da empresa: cliente, painel/face, período, investimento e estágio do funil
-- Filtro por status (Proposta, Negociação, Aprovado, Reservado, Ativo, Concluído, Perdido, Cancelado) e busca textual
-- Criação de campanha com seleção em cascata (painel → faces disponíveis daquele painel)
-- Atualização de status via modal, respeitando as mesmas regras de negócio do backend (não é possível retroceder uma campanha já ativa para fases de negociação)
-- Atalho direto para o painel de onde a campanha está sendo veiculada
-
-### 💰 Dashboard Financeiro
-Área restrita aos perfis `ADMIN` e `FINANCIAL`:
-- KPIs: MRR ativo, ARR projetado, ticket médio, ocupação total, contratos a vencer (30 dias) e inadimplência
-- Gráfico de área (Recharts): faturamento real vs. projetado, mês a mês
-- Ranking de executivos por volume de vendas (gráfico de barras horizontal)
-- Ocupação por praça/cidade, com barra de progresso e indicadores por faixa de percentual
-- Funil de pipeline (propostas → negociação → aprovados)
-- Alertas de contratos vencendo, com nível de urgência sinalizado por cor
-- Painel de inadimplência com clientes e valores em aberto
-
-### 🧑‍🤝‍🧑 Clientes e Agências
-- Cards com nome fantasia, razão social, CNPJ, telefone e e-mail
-- Busca por nome ou CNPJ
-- Perfil do cliente com receita total, ticket médio e histórico de campanhas
-- Ação para conceder acesso ao portal do cliente (planos PRO/ENTERPRISE)
-
-### 🏢 Hub da Empresa
-- Plano SaaS ativo com limite de painéis (BASIC / PRO / ENTERPRISE)
-- KPIs: painéis utilizados, MRR total da empresa e tamanho da equipe
-- Tabela de membros com cargo (Administrador, Comercial, Financeiro) e status
-- Formulário de cadastro de novos colaboradores, restrito a usuários `ADMIN`
-
-### 🧾 Faturas *(em desenvolvimento)*
-Tela de faturas com listagem, busca, e modal de registro de pagamento (PIX, entre outros métodos) já implementada na interface — a integração completa com o backend (endpoint de invoices) ainda está em construção, por isso a seção não aparece no menu lateral por padrão.
+| Inventory with map | LED Panel |
+|---|---|
+| ![Inventory](./screenshots/Inventario_Paineis.png) | ![LED](./screenshots/Panel_LED.png) |
 
 ---
 
-## 🛠️ Stack Tecnológica
+## Features
 
-| Camada | Tecnologia |
+### Landing page
+Public marketing page (`/`) with feature sections, pricing plans (Basic / Pro / Enterprise), and registration CTAs — each plan's button pre-fills the sign-up form via query string (`/register?plan=PRO`).
+
+### Overview
+Time-based personalized greeting (good morning / good afternoon / good evening) with the authenticated user's name, plus quick shortcuts to Inventory, Campaigns, and Customers.
+
+### Panel Inventory
+- Panel registration (address, city, GPS coordinates, type, illumination)
+- Interactive map with Leaflet/OpenStreetMap: each panel appears as a geolocated marker with a popup showing type, city, available faces, and a direct link to the panel's page; the map automatically adjusts zoom and bounds to the filtered panels
+- Card-based listing with type, identification code, and location
+- Detail page with an interactive visual representation of faces per panel type (Outdoor with 2 faces, LED with up to 5, Empena with 1, etc.)
+- Clicking a face opens a sidebar with status (occupied / available / reserved), current customer, monthly value, start/end dates, and a campaign progress bar
+- Quick actions: New Booking and Calendar per face
+
+### Occupancy Calendar
+- Monthly calendar modal per campaign face
+- Days marked according to campaign status (active/reserved vs. available)
+- Month-to-month navigation
+
+### Campaign Hub (Sales Pipeline)
+- Central table with all the company's campaigns: customer, panel/face, period, investment, and pipeline stage
+- Filter by status (Proposal, Negotiation, Approved, Reserved, Active, Completed, Lost, Cancelled) and text search
+- Campaign creation with cascading selection (panel → available faces for that panel)
+- Status updates via modal, enforcing the same business rules as the backend (an already-active campaign cannot be moved back to negotiation stages)
+- Direct shortcut to the panel where the campaign is being displayed
+
+### Financial Dashboard
+Area restricted to `ADMIN` and `FINANCIAL` roles:
+- KPIs: active MRR, projected ARR, average ticket, total occupancy, contracts expiring within 30 days, and delinquency
+- Area chart (Recharts): actual vs. projected revenue, month by month
+- Sales rep ranking by revenue volume (horizontal bar chart)
+- Occupancy by city, with progress bars and indicators by percentage range
+- Sales pipeline funnel (proposals → negotiation → approved)
+- Contract expiration alerts, color-coded by urgency level
+- Delinquency panel with customers and outstanding amounts
+
+### Customers and Agencies
+- Cards with trade name, corporate name, CNPJ, phone, and email
+- Search by name or CNPJ
+- Customer profile with total revenue, average ticket, and campaign history
+- Action to grant customer portal access (PRO/ENTERPRISE plans)
+
+### Company Hub
+- Active SaaS plan with panel limit (BASIC / PRO / ENTERPRISE)
+- KPIs: panels in use, total company MRR, and team size
+- Member table with role (Admin, Sales, Finance) and status
+- New employee registration form, restricted to `ADMIN` users
+
+### Invoices (in progress)
+Invoice screen with listing, search, and a payment registration modal (PIX, among other methods) already implemented in the interface — full backend integration (invoices endpoint) is still under development, which is why this section is not shown in the sidebar by default.
+
+---
+
+## Tech stack
+
+| Layer | Technology |
 |---|---|
 | Framework | Next.js 16 (App Router) + React 19 |
-| Linguagem | TypeScript |
-| Estilo | Tailwind CSS v4 |
-| Gráficos | Recharts (área, barras) |
-| Mapas | Leaflet + React-Leaflet (tiles OpenStreetMap) |
-| Ícones | Lucide React |
-| HTTP | Axios, com interceptor de autenticação |
-| Autenticação | JWT armazenado em cookie (`saas_token`), lido em cada request |
-| Proteção de rotas | Middleware do Next.js (`src/middleware.ts`) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 |
+| Charts | Recharts (area, bar) |
+| Maps | Leaflet + React-Leaflet (OpenStreetMap tiles) |
+| Icons | Lucide React |
+| HTTP | Axios, with an authentication interceptor |
+| Authentication | JWT stored in a cookie (`saas_token`), read on every request |
+| Route protection | Next.js middleware (`src/middleware.ts`) |
 
 ---
 
-## 📁 Estrutura do Projeto
+## Project structure
 
 ```
 src/
 ├── app/
-│   ├── page.tsx              # Landing page pública
-│   ├── login/                # Tela de login
-│   ├── register/             # Registro de novo tenant (com plano pré-selecionado por query string)
+│   ├── page.tsx              # Public landing page
+│   ├── login/                # Login screen
+│   ├── register/             # New tenant registration (with plan pre-selected via query string)
 │   └── dashboard/
-│       ├── page.tsx          # Visão geral
-│       ├── layout.tsx        # Sidebar, menu dinâmico por role, logout
-│       ├── panels/           # Inventário de painéis + mapa Leaflet
-│       ├── panel/[id]/       # Detalhe do painel, faces e campanhas
-│       ├── campaigns/        # Hub de campanhas (funil comercial)
-│       ├── customers/        # Clientes e agências
-│       ├── customers/[id]/   # Perfil do cliente
-│       ├── finance/          # Dashboard financeiro (ADMIN / FINANCIAL)
-│       ├── invoices/         # Faturas (em desenvolvimento)
-│       ├── team/[id]/        # Perfil de colaborador
-│       └── company/          # Hub da empresa (apenas ADMIN)
+│       ├── page.tsx          # Overview
+│       ├── layout.tsx        # Sidebar, role-based dynamic menu, logout
+│       ├── panels/           # Panel inventory + Leaflet map
+│       ├── panel/[id]/       # Panel detail, faces, and campaigns
+│       ├── campaigns/        # Campaign hub (sales pipeline)
+│       ├── customers/        # Customers and agencies
+│       ├── customers/[id]/   # Customer profile
+│       ├── finance/          # Financial dashboard (ADMIN / FINANCIAL)
+│       ├── invoices/         # Invoices (in progress)
+│       ├── team/[id]/        # Team member profile
+│       └── company/          # Company hub (ADMIN only)
 ├── components/
-│   └── MapComponent.tsx      # Mapa Leaflet reutilizável, com marcadores e auto-fit de bounds
+│   └── MapComponent.tsx      # Reusable Leaflet map, with markers and auto-fit bounds
 ├── services/
-│   └── api.ts                 # Instância Axios com interceptor de JWT
-└── middleware.ts               # Protege /dashboard/* e redireciona usuários já logados
+│   └── api.ts                 # Axios instance with JWT interceptor
+└── middleware.ts               # Protects /dashboard/* and redirects already-authenticated users
 ```
 
 ---
 
-## 🔐 Autenticação e controle de acesso
+## Authentication and access control
 
-- O token JWT retornado pelo backend é salvo no cookie `saas_token`
-- Um interceptor do Axios injeta o header `Authorization: Bearer <token>` em toda chamada à API
-- O `middleware.ts` do Next.js bloqueia acesso a `/dashboard/*` sem token (redireciona para a landing) e redireciona usuários já autenticados para longe de `/`
-- O menu lateral é montado dinamicamente conforme o `role` do usuário retornado por `/api/users/me`: apenas `ADMIN` vê "Hub da Empresa"; `ADMIN` e `FINANCIAL` veem "Financeiro"
+- The JWT returned by the backend is stored in the `saas_token` cookie
+- An Axios interceptor injects the `Authorization: Bearer <token>` header into every API call
+- Next.js `middleware.ts` blocks access to `/dashboard/*` without a token (redirecting to the landing page) and redirects already-authenticated users away from `/`
+- The sidebar menu is built dynamically based on the `role` returned by `/api/users/me`: only `ADMIN` sees "Company Hub"; `ADMIN` and `FINANCIAL` see "Finance"
 
 ---
 
-## 🚀 Como rodar localmente
+## Getting started locally
 
-### Pré-requisitos
+### Prerequisites
 - Node.js 18+
-- [Backend (Spring Boot)](https://github.com/leonardondornelles/saasooh-backend) rodando em `http://localhost:8080`
+- [Backend (Spring Boot)](https://github.com/leonardondornelles/saasooh-backend) running at `http://localhost:8080`
 
-### 1. Clone o repositório
+### 1. Clone the repository
 ```bash
 git clone https://github.com/leonardondornelles/saasooh-frontend.git
 cd saasooh-frontend
 ```
 
-### 2. Instale as dependências
+### 2. Install dependencies
 ```bash
 npm install
-# ou
+# or
 pnpm install
 ```
 
-### 3. Execute
+### 3. Run
 ```bash
 npm run dev
 ```
 
-Acesse `http://localhost:3000`.
+Visit `http://localhost:3000`.
 
-> ℹ️ A URL da API atualmente está fixa em `src/services/api.ts` (`http://localhost:8080`). Para apontar para outro ambiente, ajuste esse valor ou — como planejado no roadmap — migre para uma variável de ambiente (`NEXT_PUBLIC_API_URL`).
-
----
-
-## 🗺️ Roadmap
-
-- [ ] Mover a URL base da API para variável de ambiente (`NEXT_PUBLIC_API_URL`)
-- [ ] Concluir a integração do módulo de Faturas com o backend e adicioná-lo ao menu lateral
-- [ ] Geração de propostas comerciais em PDF direto da tela de campanhas
-- [ ] Testes de componentes (React Testing Library) para os fluxos críticos (criação de campanha, mapa de painéis)
-- [ ] Internacionalização (hoje toda a interface está em pt-BR, incluindo os valores do enum de status vindos do backend)
+> The API URL is currently hardcoded in `src/services/api.ts` (`http://localhost:8080`). To point to a different environment, update this value or — as planned in the roadmap — migrate it to an environment variable (`NEXT_PUBLIC_API_URL`).
 
 ---
 
-## 👨‍💻 Autor
+## Roadmap
+
+- [ ] Move the API base URL to an environment variable (`NEXT_PUBLIC_API_URL`)
+- [ ] Complete backend integration for the Invoices module and add it to the sidebar
+- [ ] Generate commercial proposals as PDF directly from the campaigns screen
+- [ ] Component tests (React Testing Library) for critical flows (campaign creation, panel map)
+- [ ] Internationalization (the entire interface is currently in pt-BR, including status enum values coming from the backend)
+
+---
+
+## Author
 
 **Leonardo Noronha Dornelles**
-Estudante de Ciência da Computação — PUCRS
+Computer Science student — PUCRS
 
 [GitHub](https://github.com/leonardondornelles) · [LinkedIn](https://www.linkedin.com/in/leonardo-noronha-dornelles-3a7151324/)
