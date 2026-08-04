@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: "Clientes e Agências", icon: Users, href: "/dashboard/customers" },
   ];
 
-  // Only show "Hub da Empresa" for ADMIN users
+  // Só mostra "Hub da Empresa" for ADMIN users
   if (userRole === "ADMIN") {
     menuItems.push({ name: "Financeiro", icon: CircleDollarSign, href: "/dashboard/finance" });
     menuItems.push({ name: "Hub da Empresa", icon: Building2, href: "/dashboard/company" });

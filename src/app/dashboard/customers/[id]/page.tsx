@@ -109,7 +109,7 @@ export default function CustomerProfilePage() {
           </div>
         </div>
 
-        {/* 🚀 CARDS DE RESUMO DO CRM */}
+        {/* CARDS DE RESUMO DO CRM */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner"><DollarSign size={24}/></div>

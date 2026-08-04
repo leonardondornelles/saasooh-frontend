@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-// 🚀 DICIONÁRIO DE TRADUÇÃO DOS STATUS
+//  DICIONÁRIO DE TRADUÇÃO DOS STATUS
 const statusMap: Record<string, string> = {
   PROPOSAL: "Proposta",
   NEGOTIATION: "Em Negociação",
@@ -167,7 +167,7 @@ export default function CampaignHubPage() {
     return matchesStatus && matchesSearch;
   });
 
-  // 🚀 LÓGICA DOS CARDS DE RESUMO
+  // LÓGICA DOS CARDS DE RESUMO
   const summary = {
     propostas: campaigns.filter(c => c.status === 'PROPOSAL').length,
     negociacao: campaigns.filter(c => c.status === 'NEGOTIATION').length,
@@ -203,7 +203,7 @@ export default function CampaignHubPage() {
           </button>
         </div>
 
-        {/* 🚀 CARDS DE RESUMO GERENCIAL */}
+        {/*  CARDS DE RESUMO GERENCIAL */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500"><FileText size={24}/></div>
@@ -304,7 +304,7 @@ export default function CampaignHubPage() {
                         </div>
                       </td>
 
-                      {/* 🚀 CONTEXTO RICO DO PAINEL (Face + Endereço + Cidade + Tipo) */}
+                      {/* CONTEXTO RICO DO PAINEL (Face + Endereço + Cidade + Tipo) */}
                       <td className="px-6 py-4 text-sm">
                         <div className="flex flex-col items-start">
                           <span className="font-bold text-slate-800 flex items-center gap-1.5">
@@ -331,7 +331,7 @@ export default function CampaignHubPage() {
                         {formatCurrency(camp.monthlyValue)}
                       </td>
                       
-                      {/* 🚀 STATUS TRADUZIDO */}
+                    
                       <td className="px-6 py-4">
                         <button 
                           onClick={() => camp.status !== "COMPLETED" && camp.status !== "CANCELLED" && openStatusModal(camp)}
@@ -417,7 +417,7 @@ export default function CampaignHubPage() {
           </div>
         )}
 
-        {/* 🚀 MODAL DE EVOLUÇÃO DE STATUS (AGORA TRADUZIDO) */}
+        {/*  MODAL DE EVOLUÇÃO DE STATUS  */}
         {showStatusModal && selectedCampaign && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowStatusModal(false)}></div>
@@ -442,7 +442,7 @@ export default function CampaignHubPage() {
                           className={`py-2.5 px-3 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all
                             ${statusForm.status === s ? getStatusColorClass(s) + ' ring-2 ring-offset-1 ring-slate-200 font-black' : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'}`}
                         >
-                          {statusMap[s]} {/* 🚀 Renderiza em Português */}
+                          {statusMap[s]} {/*  Renderiza em Português */}
                         </button>
                       ))}
                     </>
